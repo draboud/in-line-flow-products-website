@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Webflow Debugger",
+      "type": "chrome",
+      "request": "launch",
+      "url": "https://tester-client-first.webflow.io/",
+      "webRoot": "${workspaceFolder}/src",
+      "sourceMapPathOverrides": {
+        "http://localhost:3000/*": "${workspaceFolder}/src/*",
+        "https://tester-client-first.webflow.io/*": "${workspaceFolder}/src/*",
+        "webpack:///src/*": "${workspaceFolder}/src/*"
+      },
+      "skipFiles": [
+        "<node_internals>/**",
+        "**/node_modules/**",
+        "**/jquery*.js",
+        "**/webflow*.js",
+        "https://cdn.prod.website-files.com**",
+        "**/js/webflow.*.js"
+      ]
+    }
+  ]
+}
