@@ -8,6 +8,7 @@ const allTxtWraps = [...document.querySelectorAll(".txt-wrap")];
 const allVidDivs = [...document.querySelectorAll(".vid-div")];
 const allVidCode = [...document.querySelectorAll(".vid-code")];
 const allVids = document.querySelectorAll(".vid");
+const allProductsBtns = document.querySelectorAll(".btn.products");
 const ctrlBtnWrap = document.querySelector(".section-wrap-btns");
 let activeVidCode;
 let activeVid = document.querySelectorAll(".vid")[1]; //fix this
@@ -18,6 +19,7 @@ const dragTrack = document.querySelector(".drag-track");
 const dragHandle = document.querySelector(".drag-handle");
 let dragInstance;
 let activeRotateVid = null;
+let mobileSelectedProductView = false;
 //......................................................
 //EVENTS................................................
 navBar.addEventListener("click", function (e) {
@@ -38,6 +40,29 @@ mainWrap.addEventListener("click", function (e) {
   dragWrap.classList.remove("active");
   resetDragControl();
   activateProduct(datasetAction);
+
+  if (activeVid.parentElement.classList.contains("mp")) {
+    mobileSelectedProductView = true;
+    toggleMobileProductOpts();
+  }
+});
+allProductsBtns.forEach(function (el) {
+  el.addEventListener("click", function () {
+    mobileSelectedProductView = false;
+    toggleMobileProductOpts();
+  });
+});
+allVids.forEach(function (el) {
+  el.addEventListener("ended", function (e) {
+    const endedVid = e.target.closest(".vid");
+    if (endedVid.parentElement.dataset.vidType !== "reveal") return;
+
+    activeRotateVid.parentElement.classList.add("active");
+    activeVid = activeRotateVid;
+    activeVid.preload = "auto";
+    activeVid.load();
+    dragWrap.classList.add("active");
+  });
 });
 //GSAP SLIDER EVENTS
 document.addEventListener("DOMContentLoaded", () => {
@@ -94,18 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
     Draggable.get(".drag-handle").applyBounds(".drag-track");
   });
 });
-allVids.forEach(function (el) {
-  el.addEventListener("ended", function (e) {
-    const endedVid = e.target.closest(".vid");
-    if (endedVid.parentElement.dataset.vidType !== "reveal") return;
 
-    activeRotateVid.parentElement.classList.add("active");
-    activeVid = activeRotateVid;
-    activeVid.preload = "auto";
-    activeVid.load();
-    dragWrap.classList.add("active");
-  });
-});
 //......................................................
 //FUNCTIONS.............................................
 function activateNavLink(clickedNavLink) {
@@ -166,9 +180,20 @@ function resetDragControl() {
   });
 }
 //.............................................
-// document.querySelector(".txt-and-btns-wrap").style.height = "45%";
-// document.querySelector(".btns-grid").style.display = "none";
-// document.querySelector(".broch-prods-btns-wrap").style.display = "flex";
-// document.querySelector(".vid-div").style.display = "block";
-// document.querySelector(".all-txt-wrap").style.display = "block";
+function toggleMobileProductOpts() {
+  if (mobileSelectedProductView) {
+    document.querySelector(".txt-and-btns-wrap").style.height = "45%";
+    document.querySelector(".btns-grid").style.display = "none";
+    document.querySelector(".broch-prods-btns-wrap").style.display = "flex";
+    document.querySelector(".vid-div").style.display = "block";
+    document.querySelector(".all-txt-wrap").style.display = "block";
+  } else {
+    mobileSelectedProductView = false;
+    document.querySelector(".txt-and-btns-wrap").style.height = "100%";
+    document.querySelector(".btns-grid").style.display = "grid";
+    document.querySelector(".broch-prods-btns-wrap").style.display = "none";
+    document.querySelector(".vid-div").style.display = "none";
+    document.querySelector(".all-txt-wrap").style.display = "none";
+  }
+}
 //.............................................

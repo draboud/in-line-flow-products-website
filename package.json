@@ -2,11 +2,11 @@
   "name": "in-line-flow-products-website",
   "version": "1.0.0",
   "description": "",
-  "main": ".//src/main.js",
+  "main": ".//src/script.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "serve": "serve",
-    "build": "esbuild src/main.js --bundle --sourcemap=inline --outfile=dist/main.js --watch",
+    "build": "esbuild src/script.js --bundle --sourcemap=inline --outfile=dist/script.js --watch",
     "build-by-file": "node builder.js"
   },
   "author": "",
