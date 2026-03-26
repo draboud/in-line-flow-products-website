@@ -180,20 +180,48 @@ function resetDragControl() {
   });
 }
 //.............................................
+// function toggleMobileProductOpts() {
+//   if (mobileSelectedProductView) {
+//     document.querySelector(".txt-and-btns-wrap").style.height = "45%";
+//     document.querySelector(".btns-grid").style.display = "none";
+//     document.querySelector(".broch-prods-btns-wrap").style.display = "flex";
+//     document.querySelector(".vid-div").style.display = "block";
+//     document.querySelector(".all-txt-wrap").style.display = "block";
+//   } else {
+//     mobileSelectedProductView = false;
+//     document.querySelector(".txt-and-btns-wrap").style.height = "100%";
+//     document.querySelector(".btns-grid").style.display = "grid";
+//     document.querySelector(".broch-prods-btns-wrap").style.display = "none";
+//     document.querySelector(".vid-div").style.display = "none";
+//     document.querySelector(".all-txt-wrap").style.display = "none";
+//   }
+// }
 function toggleMobileProductOpts() {
+  const wrap = document.querySelector(".txt-and-btns-wrap");
+  const btnsGrid = document.querySelector(".btns-grid");
+  const brochWrap = document.querySelector(".broch-prods-btns-wrap");
+  const vidDiv = document.querySelector(".vid-div");
+  const txtWrap = document.querySelector(".all-txt-wrap");
+
   if (mobileSelectedProductView) {
-    document.querySelector(".txt-and-btns-wrap").style.height = "45%";
-    document.querySelector(".btns-grid").style.display = "none";
-    document.querySelector(".broch-prods-btns-wrap").style.display = "flex";
-    document.querySelector(".vid-div").style.display = "block";
-    document.querySelector(".all-txt-wrap").style.display = "block";
+    // Use min-height or vh to ensure iOS respects the space
+    wrap.style.height = "45vh";
+    btnsGrid.style.display = "none";
+
+    // Explicitly set flex and block
+    brochWrap.style.display = "flex";
+    vidDiv.style.display = "block";
+    txtWrap.style.display = "block";
+
+    // Force a "Reflow" for iOS Safari
+    txtWrap.style.opacity = "1";
   } else {
-    mobileSelectedProductView = false;
-    document.querySelector(".txt-and-btns-wrap").style.height = "100%";
-    document.querySelector(".btns-grid").style.display = "grid";
-    document.querySelector(".broch-prods-btns-wrap").style.display = "none";
-    document.querySelector(".vid-div").style.display = "none";
-    document.querySelector(".all-txt-wrap").style.display = "none";
+    wrap.style.height = "100%";
+    btnsGrid.style.display = "grid";
+    brochWrap.style.display = "none";
+    vidDiv.style.display = "none";
+    txtWrap.style.display = "none";
   }
 }
+
 //.............................................
