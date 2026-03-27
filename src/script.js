@@ -198,30 +198,32 @@ function resetDragControl() {
 //   }
 // }
 function toggleMobileProductOpts() {
-  const wrap = document.querySelector(".txt-and-btns-wrap");
+  // Select our elements once to keep it clean
+  const txtAndBtnsWrap = document.querySelector(".txt-and-btns-wrap");
   const btnsGrid = document.querySelector(".btns-grid");
   const brochWrap = document.querySelector(".broch-prods-btns-wrap");
   const vidDiv = document.querySelector(".vid-div");
-  const txtWrap = document.querySelector(".all-txt-wrap");
+  const allTxtWrap = document.querySelector(".all-txt-wrap");
 
   if (mobileSelectedProductView) {
-    // Use min-height or vh to ensure iOS respects the space
-    wrap.style.height = "45vh";
-    btnsGrid.style.display = "none";
+    // 1. Use 45vh (viewport height) because iOS often ignores % heights
+    txtAndBtnsWrap.style.height = "45vh";
 
-    // Explicitly set flex and block
+    // 2. Hide/Show elements
+    btnsGrid.style.display = "none";
     brochWrap.style.display = "flex";
     vidDiv.style.display = "block";
-    txtWrap.style.display = "block";
 
-    // Force a "Reflow" for iOS Safari
-    txtWrap.style.opacity = "1";
+    // 3. Show text and force a "reflow" (Critical for iPhone rendering)
+    allTxtWrap.style.display = "block";
+    void allTxtWrap.offsetHeight; // This "magic" line forces Safari to redraw
   } else {
-    wrap.style.height = "100%";
+    // Reset state
+    txtAndBtnsWrap.style.height = "100%";
     btnsGrid.style.display = "grid";
     brochWrap.style.display = "none";
     vidDiv.style.display = "none";
-    txtWrap.style.display = "none";
+    allTxtWrap.style.display = "none";
   }
 }
 
