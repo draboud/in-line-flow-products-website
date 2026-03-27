@@ -243,7 +243,7 @@ function toggleMobileProductOpts() {
     // activeTxtWrap.style.zIndex = "10"; // Force to the front
     // activeTxtWrap.style.position = "relative"; // Required for z-index to work
     // 4. The "Magic" Reflow (Critical for iOS)
-    void activeTxtWrap.offsetHeight;
+    // void activeTxtWrap.offsetHeight;
   } else {
     txtAndBtnsWrap.style.height = "100%";
     document.querySelector(".btns-grid").classList.add("active");
