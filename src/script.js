@@ -1,4 +1,3 @@
-console.log("testing...2");
 //.....................................................
 //VID CTRLS DEFINITIONS................................
 const navBar = document.querySelector(".nav_component");
@@ -11,8 +10,10 @@ const allVidCode = [...document.querySelectorAll(".vid-code")];
 const allVids = document.querySelectorAll(".vid");
 const allProductsBtns = document.querySelectorAll(".btn.products");
 const ctrlBtnWrap = document.querySelector(".section-wrap-btns");
-let activeVidCode;
+let activeVidDiv = null;
+let activeVidCode = null;
 let activeVid = document.querySelectorAll(".vid")[1]; //fix this
+let isMobilePortrait = false;
 //.....................................................
 //GSAP DEFINITIONS.....................................
 const dragWrap = document.querySelector(".drag-wrap");
@@ -21,7 +22,6 @@ const dragHandle = document.querySelector(".drag-handle");
 let dragInstance;
 let activeRotateVid = null;
 let mobileSelectedProductView = false;
-
 let isSeeking = false; // The "lock" to prevent over-taxing the CPU
 //......................................................
 //EVENTS................................................
@@ -43,7 +43,6 @@ mainWrap.addEventListener("click", function (e) {
   dragWrap.classList.remove("active");
   resetDragControl();
   activateProduct(datasetAction);
-
   if (activeVid.parentElement.classList.contains("mp")) {
     mobileSelectedProductView = true;
     toggleMobileProductOpts();
@@ -51,8 +50,10 @@ mainWrap.addEventListener("click", function (e) {
 });
 allProductsBtns.forEach(function (el) {
   el.addEventListener("click", function () {
-    mobileSelectedProductView = false;
-    toggleMobileProductOpts();
+    if (activeVid.parentElement.classList.contains("mp")) {
+      mobileSelectedProductView = false;
+      toggleMobileProductOpts();
+    }
   });
 });
 allVids.forEach(function (el) {
@@ -61,7 +62,6 @@ allVids.forEach(function (el) {
     if (endedVid.parentElement.dataset.vidType !== "reveal") return;
     activeRotateVid.parentElement.classList.add("active");
     activeVid = activeRotateVid;
-    // activeVid.preload = "auto";
     activeVid.load();
     dragWrap.classList.add("active");
   });
@@ -93,7 +93,9 @@ document.addEventListener("DOMContentLoaded", () => {
           .then(() => {
             vid.pause();
           })
-          .catch((err) => console.log("Buffering initiated"));
+          .catch((err) => {
+            /* Intentional silence: we are just warming the buffer */
+          });
       });
     },
     { once: true },
@@ -136,9 +138,21 @@ document.addEventListener("DOMContentLoaded", () => {
       },
     });
   });
+  init();
 });
 //......................................................
 //FUNCTIONS.............................................
+function init() {
+  const mobilePortraitQuery = window.matchMedia("(max-width: 479px)");
+  if (mobilePortraitQuery.matches) {
+    isMobilePortrait = true;
+  }
+  if (isMobilePortrait !== true) {
+    setActiveVidDiv();
+    setActiveRevealAndRotateVids("product-1");
+    activeVid.play();
+  }
+}
 function activateNavLink(clickedNavLink) {
   allNavLinks.forEach(function (el) {
     el.querySelector(".nav_menu_link-bar").classList.remove("active");
@@ -147,7 +161,8 @@ function activateNavLink(clickedNavLink) {
 }
 function activateProduct(datasetAction) {
   setActiveTxt(datasetAction);
-  seActiveRevealAndRotateVids(datasetAction);
+  setActiveVidDiv();
+  setActiveRevealAndRotateVids(datasetAction);
   activeVid.play();
 }
 function setActiveTxt(datasetAction) {
@@ -156,37 +171,20 @@ function setActiveTxt(datasetAction) {
     if (el.dataset.product === datasetAction) el.classList.add("active");
   });
 }
-// function seActiveRevealAndRotateVids(datasetAction) {
-//   allVidCode.forEach(function (el) {
-//     const vid = el.querySelector(".vid");
-//     const source = vid.querySelector("source");
-//     // 1. If it's NOT the active product, kill the connection to save data
-//     if (el.dataset.product !== datasetAction) {
-//       vid.pause();
-//       source.src = ""; // Empty the source
-//       vid.load(); // Clear the buffer
-//       el.classList.remove("active");
-//       return;
-//     }
-//     // 2. If it IS the active product, load it now
-//     if (el.dataset.vidType === "reveal" || el.dataset.vidType === "rotate") {
-//       // Only set the src if it's empty (prevents re-loading)
-//       if (source.src !== source.dataset.src) {
-//         source.src = source.dataset.src;
-//         vid.load();
-//       }
-//       el.classList.add("active");
-//       if (el.dataset.vidType === "reveal") activeVid = vid;
-//       if (el.dataset.vidType === "rotate") activeRotateVid = vid;
-//     }
-//   });
-// }
-function seActiveRevealAndRotateVids(datasetAction) {
-  allVidCode.forEach(function (el) {
+function setActiveVidDiv() {
+  allVidDivs.forEach(function (el) {
+    el.classList.remove("active");
+  });
+  if (isMobilePortrait) {
+    activeVidDiv = allVidDivs.find((el) => el.classList.contains("mp"));
+  } else activeVidDiv = allVidDivs.find((el) => !el.classList.contains("mp"));
+  activeVidDiv.classList.add("active");
+}
+function setActiveRevealAndRotateVids(datasetAction) {
+  activeVidDiv.querySelectorAll(".vid-code").forEach(function (el) {
     const vid = el.querySelector(".vid");
     const source = vid.querySelector("source");
     if (!source) return;
-
     // 1. If it's NOT the active product, kill the connection to save data
     if (el.dataset.product !== datasetAction) {
       vid.pause();
@@ -195,13 +193,11 @@ function seActiveRevealAndRotateVids(datasetAction) {
       el.classList.remove("active");
       return;
     }
-
     // 2. If it IS the active product, load the data
     if (source.src !== source.dataset.src) {
       source.src = source.dataset.src;
       vid.load();
     }
-
     // --- THE SEQUENCE LOGIC ---
     if (el.dataset.vidType === "reveal") {
       el.classList.add("active"); // SHOW the Reveal video
@@ -212,7 +208,6 @@ function seActiveRevealAndRotateVids(datasetAction) {
     }
   });
 }
-
 function resetDragControl() {
   // 1. Reset the activeVid immediately
   activeVid.currentTime = 0;
@@ -235,9 +230,10 @@ function toggleMobileProductOpts() {
     // 1. Force a height that Safari cannot ignore
     wrap.style.setProperty("height", "45vh", "important");
     // 2. Standard toggles
-    document.querySelector(".btns-grid").style.display = "none";
+    document.querySelector(".btns-grid").classList.remove("active");
     document.querySelector(".broch-prods-btns-wrap").style.display = "flex";
-    document.querySelector(".vid-div").style.display = "block";
+    activeVidDiv.style.display = "block";
+    document.querySelector(".drag-wrap").classList.add("active");
     // 3. iPhone Visibility Fixes
     allTxt.style.display = "block";
     allTxt.style.visibility = "visible"; // Force visibility
@@ -248,9 +244,10 @@ function toggleMobileProductOpts() {
     void allTxt.offsetHeight;
   } else {
     wrap.style.height = "100%";
-    document.querySelector(".btns-grid").style.display = "grid";
+    document.querySelector(".btns-grid").classList.add("active");
     document.querySelector(".broch-prods-btns-wrap").style.display = "none";
-    document.querySelector(".vid-div").style.display = "none";
+    activeVidDiv.style.display = "none";
+    document.querySelector(".drag-wrap").classList.remove("active");
     allTxt.style.display = "none";
   }
 }
