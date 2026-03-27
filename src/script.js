@@ -238,7 +238,7 @@ function toggleMobileProductOpts() {
     // 3. iPhone Visibility Fixes
     // activeTxtWrap.style.display = "block";
     activeTxtWrap.classList.add("active");
-    // activeTxtWrap.style.visibility = "visible"; // Force visibility
+    activeTxtWrap.style.visibility = "visible"; // Force visibility
     // activeTxtWrap.style.opacity = "1"; // Force opacity
     // activeTxtWrap.style.zIndex = "10"; // Force to the front
     // activeTxtWrap.style.position = "relative"; // Required for z-index to work
