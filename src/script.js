@@ -232,22 +232,24 @@ function toggleMobileProductOpts() {
     // 2. Standard toggles
     document.querySelector(".btns-grid").classList.remove("active");
     document.querySelector(".broch-prods-btns-wrap").style.display = "flex";
-    activeVidDiv.style.display = "block";
+    // activeVidDiv.style.display = "block";
+    activeVidDiv.classList.add("active");
     document.querySelector(".drag-wrap").classList.add("active");
     // 3. iPhone Visibility Fixes
     // activeTxtWrap.style.display = "block";
     activeTxtWrap.classList.add("active");
-    activeTxtWrap.style.visibility = "visible"; // Force visibility
-    activeTxtWrap.style.opacity = "1"; // Force opacity
-    activeTxtWrap.style.zIndex = "10"; // Force to the front
-    activeTxtWrap.style.position = "relative"; // Required for z-index to work
+    // activeTxtWrap.style.visibility = "visible"; // Force visibility
+    // activeTxtWrap.style.opacity = "1"; // Force opacity
+    // activeTxtWrap.style.zIndex = "10"; // Force to the front
+    // activeTxtWrap.style.position = "relative"; // Required for z-index to work
     // 4. The "Magic" Reflow (Critical for iOS)
     void activeTxtWrap.offsetHeight;
   } else {
     txtAndBtnsWrap.style.height = "100%";
     document.querySelector(".btns-grid").classList.add("active");
     document.querySelector(".broch-prods-btns-wrap").style.display = "none";
-    activeVidDiv.style.display = "none";
+    // activeVidDiv.style.display = "none";
+    activeVidDiv.classList.remove("active");
     document.querySelector(".drag-wrap").classList.remove("active");
     // activeTxtWrap.style.display = "none";
     activeTxtWrap.classList.remove("active");
