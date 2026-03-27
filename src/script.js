@@ -198,32 +198,33 @@ function resetDragControl() {
 //   }
 // }
 function toggleMobileProductOpts() {
-  // Select our elements once to keep it clean
-  const txtAndBtnsWrap = document.querySelector(".txt-and-btns-wrap");
-  const btnsGrid = document.querySelector(".btns-grid");
-  const brochWrap = document.querySelector(".broch-prods-btns-wrap");
-  const vidDiv = document.querySelector(".vid-div");
-  const allTxtWrap = document.querySelector(".all-txt-wrap");
+  const wrap = document.querySelector(".txt-and-btns-wrap");
+  const allTxt = document.querySelector(".all-txt-wrap");
 
   if (mobileSelectedProductView) {
-    // 1. Use 45vh (viewport height) because iOS often ignores % heights
-    txtAndBtnsWrap.style.height = "45vh";
+    // 1. Force a height that Safari cannot ignore
+    wrap.style.setProperty("height", "45vh", "important");
 
-    // 2. Hide/Show elements
-    btnsGrid.style.display = "none";
-    brochWrap.style.display = "flex";
-    vidDiv.style.display = "block";
+    // 2. Standard toggles
+    document.querySelector(".btns-grid").style.display = "none";
+    document.querySelector(".broch-prods-btns-wrap").style.display = "flex";
+    document.querySelector(".vid-div").style.display = "block";
 
-    // 3. Show text and force a "reflow" (Critical for iPhone rendering)
-    allTxtWrap.style.display = "block";
-    void allTxtWrap.offsetHeight; // This "magic" line forces Safari to redraw
+    // 3. iPhone Visibility Fixes
+    allTxt.style.display = "block";
+    allTxt.style.visibility = "visible"; // Force visibility
+    allTxt.style.opacity = "1"; // Force opacity
+    allTxt.style.zIndex = "9999"; // Force to the front
+    allTxt.style.position = "relative"; // Required for z-index to work
+
+    // 4. The "Magic" Reflow (Critical for iOS)
+    void allTxt.offsetHeight;
   } else {
-    // Reset state
-    txtAndBtnsWrap.style.height = "100%";
-    btnsGrid.style.display = "grid";
-    brochWrap.style.display = "none";
-    vidDiv.style.display = "none";
-    allTxtWrap.style.display = "none";
+    wrap.style.height = "100%";
+    document.querySelector(".btns-grid").style.display = "grid";
+    document.querySelector(".broch-prods-btns-wrap").style.display = "none";
+    document.querySelector(".vid-div").style.display = "none";
+    allTxt.style.display = "none";
   }
 }
 
