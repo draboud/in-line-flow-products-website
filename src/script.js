@@ -240,7 +240,7 @@ function toggleMobileProductOpts() {
     activeTxtWrap.classList.add("active");
     activeTxtWrap.style.visibility = "visible"; // Force visibility
     activeTxtWrap.style.opacity = "1"; // Force opacity
-    // activeTxtWrap.style.zIndex = "10"; // Force to the front
+    activeTxtWrap.style.zIndex = "10"; // Force to the front
     // activeTxtWrap.style.position = "relative"; // Required for z-index to work
     // 4. The "Magic" Reflow (Critical for iOS)
     // void activeTxtWrap.offsetHeight;
