@@ -111,14 +111,28 @@ document.addEventListener("DOMContentLoaded", () => {
       },
     });
   });
+  // function updateVideo(instance) {
+  //   let progress = instance.x / instance.maxX;
+  //   activeVid.currentTime = progress * activeVid.duration;
+  // }
+  // // 3. Handle window resizing to keep bounds accurate
+  // window.addEventListener("resize", () => {
+  //   Draggable.get(".drag-handle").applyBounds(".drag-track");
+  // });
+  let isSeeking = false; // The "lock" to prevent over-taxing the CPU
+
   function updateVideo(instance) {
-    let progress = instance.x / instance.maxX;
-    activeVid.currentTime = progress * activeVid.duration;
+    if (!activeVid || !activeVid.duration || isSeeking) return;
+
+    isSeeking = true; // Lock the function
+
+    requestAnimationFrame(() => {
+      let progress = instance.x / instance.maxX;
+      // Apply the time change
+      activeVid.currentTime = progress * activeVid.duration;
+      isSeeking = false; // Unlock for the next frame
+    });
   }
-  // 3. Handle window resizing to keep bounds accurate
-  window.addEventListener("resize", () => {
-    Draggable.get(".drag-handle").applyBounds(".drag-track");
-  });
 });
 
 //......................................................
@@ -180,43 +194,22 @@ function resetDragControl() {
     },
   });
 }
-//.............................................
-// function toggleMobileProductOpts() {
-//   if (mobileSelectedProductView) {
-//     document.querySelector(".txt-and-btns-wrap").style.height = "45%";
-//     document.querySelector(".btns-grid").style.display = "none";
-//     document.querySelector(".broch-prods-btns-wrap").style.display = "flex";
-//     document.querySelector(".vid-div").style.display = "block";
-//     document.querySelector(".all-txt-wrap").style.display = "block";
-//   } else {
-//     mobileSelectedProductView = false;
-//     document.querySelector(".txt-and-btns-wrap").style.height = "100%";
-//     document.querySelector(".btns-grid").style.display = "grid";
-//     document.querySelector(".broch-prods-btns-wrap").style.display = "none";
-//     document.querySelector(".vid-div").style.display = "none";
-//     document.querySelector(".all-txt-wrap").style.display = "none";
-//   }
-// }
 function toggleMobileProductOpts() {
   const wrap = document.querySelector(".txt-and-btns-wrap");
   const allTxt = document.querySelector(".all-txt-wrap");
-
   if (mobileSelectedProductView) {
     // 1. Force a height that Safari cannot ignore
     wrap.style.setProperty("height", "45vh", "important");
-
     // 2. Standard toggles
     document.querySelector(".btns-grid").style.display = "none";
     document.querySelector(".broch-prods-btns-wrap").style.display = "flex";
     document.querySelector(".vid-div").style.display = "block";
-
     // 3. iPhone Visibility Fixes
     allTxt.style.display = "block";
     allTxt.style.visibility = "visible"; // Force visibility
     allTxt.style.opacity = "1"; // Force opacity
     allTxt.style.zIndex = "9999"; // Force to the front
     allTxt.style.position = "relative"; // Required for z-index to work
-
     // 4. The "Magic" Reflow (Critical for iOS)
     void allTxt.offsetHeight;
   } else {
@@ -227,5 +220,3 @@ function toggleMobileProductOpts() {
     allTxt.style.display = "none";
   }
 }
-
-//.............................................
