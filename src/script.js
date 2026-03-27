@@ -5,7 +5,7 @@ const allNavLinks = navBar.querySelectorAll(".nav_menu_link-wrap");
 const mainWrap = document.querySelector(".main-wrapper");
 const blackout = document.querySelector(".blackout-section");
 const txtAndBtnsWrap = document.querySelector(".txt-and-btns-wrap");
-const activeTxtWrap = document.querySelector(".txt-wrap");
+// const activeTxtWrap = document.querySelector(".txt-wrap");
 const allTxtWraps = [...document.querySelectorAll(".txt-wrap")];
 const allVidDivs = [...document.querySelectorAll(".vid-div")];
 const allVidCode = [...document.querySelectorAll(".vid-code")];
@@ -13,6 +13,7 @@ const allVids = document.querySelectorAll(".vid");
 const allProductsBtns = document.querySelectorAll(".btn.products");
 const ctrlBtnWrap = document.querySelector(".section-wrap-btns");
 let activeVidDiv = null;
+let activeTxtWrap = null;
 let activeVidCode = null;
 let activeVid = document.querySelectorAll(".vid")[1]; //fix this
 let isMobilePortrait = false;
@@ -151,6 +152,7 @@ function init() {
   }
   if (isMobilePortrait !== true) {
     setActiveVidDiv();
+    setActiveTxt("product-1");
     setActiveRevealAndRotateVids("product-1");
     activeVid.play();
   }
@@ -170,7 +172,10 @@ function activateProduct(datasetAction) {
 function setActiveTxt(datasetAction) {
   allTxtWraps.forEach(function (el) {
     el.classList.remove("active");
-    if (el.dataset.product === datasetAction) el.classList.add("active");
+    if (el.dataset.product === datasetAction) {
+      el.classList.add("active");
+      activeTxtWrap = el;
+    }
   });
 }
 function setActiveVidDiv() {

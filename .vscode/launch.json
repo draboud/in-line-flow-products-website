@@ -5,7 +5,7 @@
       "name": "Launch Webflow Debugger",
       "type": "chrome",
       "request": "launch",
-      "url": "https://tester-client-first.webflow.io/",
+      "url": "https://in-line-flow-products.webflow.io/",
       "webRoot": "${workspaceFolder}/src",
       "sourceMapPathOverrides": {
         "http://localhost:3000/*": "${workspaceFolder}/src/*",
