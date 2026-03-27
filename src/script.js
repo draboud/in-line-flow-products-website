@@ -5,7 +5,7 @@ const allNavLinks = navBar.querySelectorAll(".nav_menu_link-wrap");
 const mainWrap = document.querySelector(".main-wrapper");
 const blackout = document.querySelector(".blackout-section");
 const txtAndBtnsWrap = document.querySelector(".txt-and-btns-wrap");
-const activeAllTxtWrap = document.querySelector(".all-txt-wrap");
+const activeTxtWrap = document.querySelector(".txt-wrap");
 const allTxtWraps = [...document.querySelectorAll(".txt-wrap")];
 const allVidDivs = [...document.querySelectorAll(".vid-div")];
 const allVidCode = [...document.querySelectorAll(".vid-code")];
@@ -235,19 +235,19 @@ function toggleMobileProductOpts() {
     activeVidDiv.style.display = "block";
     document.querySelector(".drag-wrap").classList.add("active");
     // 3. iPhone Visibility Fixes
-    activeAllTxtWrap.style.display = "block";
-    activeAllTxtWrap.style.visibility = "visible"; // Force visibility
-    activeAllTxtWrap.style.opacity = "1"; // Force opacity
-    activeAllTxtWrap.style.zIndex = "10"; // Force to the front
-    activeAllTxtWrap.style.position = "relative"; // Required for z-index to work
+    activeTxtWrap.style.display = "block";
+    activeTxtWrap.style.visibility = "visible"; // Force visibility
+    activeTxtWrap.style.opacity = "1"; // Force opacity
+    activeTxtWrap.style.zIndex = "10"; // Force to the front
+    activeTxtWrap.style.position = "relative"; // Required for z-index to work
     // 4. The "Magic" Reflow (Critical for iOS)
-    void activeAllTxtWrap.offsetHeight;
+    void activeTxtWrap.offsetHeight;
   } else {
     txtAndBtnsWrap.style.height = "100%";
     document.querySelector(".btns-grid").classList.add("active");
     document.querySelector(".broch-prods-btns-wrap").style.display = "none";
     activeVidDiv.style.display = "none";
     document.querySelector(".drag-wrap").classList.remove("active");
-    activeAllTxtWrap.style.display = "none";
+    activeTxtWrap.style.display = "none";
   }
 }
