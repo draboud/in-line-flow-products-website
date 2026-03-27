@@ -149,6 +149,9 @@ function init() {
   const mobilePortraitQuery = window.matchMedia("(max-width: 479px)");
   if (mobilePortraitQuery.matches) {
     isMobilePortrait = true;
+    allTxtWraps.forEach(function (el) {
+      el.classList.remove("active");
+    });
   }
   if (isMobilePortrait !== true) {
     setActiveVidDiv();
