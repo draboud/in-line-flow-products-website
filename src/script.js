@@ -21,6 +21,8 @@ const dragHandle = document.querySelector(".drag-handle");
 let dragInstance;
 let activeRotateVid = null;
 let mobileSelectedProductView = false;
+
+let isSeeking = false; // The "lock" to prevent over-taxing the CPU
 //......................................................
 //EVENTS................................................
 navBar.addEventListener("click", function (e) {
@@ -57,17 +59,30 @@ allVids.forEach(function (el) {
   el.addEventListener("ended", function (e) {
     const endedVid = e.target.closest(".vid");
     if (endedVid.parentElement.dataset.vidType !== "reveal") return;
-
     activeRotateVid.parentElement.classList.add("active");
     activeVid = activeRotateVid;
-    activeVid.preload = "auto";
+    // activeVid.preload = "auto";
     activeVid.load();
     dragWrap.classList.add("active");
   });
 });
-
 //TOUCHSTART INIT AND GSAP SLIDER EVENTS
 document.addEventListener("DOMContentLoaded", () => {
+  // Place this inside your DOMContentLoaded block
+  function updateVideo(instance) {
+    // 1. Safety checks: Ensure there is a video and it has a duration
+    if (!activeVid || !activeVid.duration) return;
+    // 2. Performance Check: If the phone is still processing the last frame, skip this one
+    if (isSeeking) return;
+    isSeeking = true; // Lock
+    // 3. Sync with the screen's refresh rate
+    requestAnimationFrame(() => {
+      let progress = instance.x / instance.maxX;
+      // 4. Update the video time
+      activeVid.currentTime = progress * activeVid.duration;
+      isSeeking = false; // Unlock for the next frame
+    });
+  }
   document.addEventListener(
     "touchstart",
     function () {
@@ -84,12 +99,6 @@ document.addEventListener("DOMContentLoaded", () => {
     { once: true },
   ); // Only runs on the very first tap
   gsap.registerPlugin(Draggable);
-  function updateVideo(instance) {
-    if (activeVid && activeVid.duration) {
-      let progress = instance.x / instance.maxX;
-      activeVid.currentTime = progress * activeVid.duration;
-    }
-  }
   // Create the draggable and store it in a variable
   dragInstance = Draggable.create(dragHandle, {
     type: "x",
@@ -127,22 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
       },
     });
   });
-  let isSeeking = false; // The "lock" to prevent over-taxing the CPU
-
-  function updateVideo(instance) {
-    if (!activeVid || !activeVid.duration || isSeeking) return;
-
-    isSeeking = true; // Lock the function
-
-    requestAnimationFrame(() => {
-      let progress = instance.x / instance.maxX;
-      // Apply the time change
-      activeVid.currentTime = progress * activeVid.duration;
-      isSeeking = false; // Unlock for the next frame
-    });
-  }
 });
-
 //......................................................
 //FUNCTIONS.............................................
 function activateNavLink(clickedNavLink) {
@@ -164,26 +158,26 @@ function setActiveTxt(datasetAction) {
 }
 // function seActiveRevealAndRotateVids(datasetAction) {
 //   allVidCode.forEach(function (el) {
-//     el.querySelector(".vid").currentTime = 0;
-//     el.querySelector(".vid").pause();
-//     el.querySelector(".vid").preload = "metadata";
-//     el.querySelector(".vid").load();
-//     el.classList.remove("active");
-//     if (
-//       el.dataset.product === datasetAction &&
-//       el.dataset.vidType === "reveal" &&
-//       window.getComputedStyle(el).display !== "none"
-//     ) {
-//       el.classList.add("active");
-//       activeVid = el.querySelector(".vid");
-//       activeVid.preload = "auto";
+//     const vid = el.querySelector(".vid");
+//     const source = vid.querySelector("source");
+//     // 1. If it's NOT the active product, kill the connection to save data
+//     if (el.dataset.product !== datasetAction) {
+//       vid.pause();
+//       source.src = ""; // Empty the source
+//       vid.load(); // Clear the buffer
+//       el.classList.remove("active");
+//       return;
 //     }
-//     if (
-//       el.dataset.product === datasetAction &&
-//       el.dataset.vidType === "rotate" &&
-//       window.getComputedStyle(el).display !== "none"
-//     ) {
-//       activeRotateVid = el.querySelector(".vid");
+//     // 2. If it IS the active product, load it now
+//     if (el.dataset.vidType === "reveal" || el.dataset.vidType === "rotate") {
+//       // Only set the src if it's empty (prevents re-loading)
+//       if (source.src !== source.dataset.src) {
+//         source.src = source.dataset.src;
+//         vid.load();
+//       }
+//       el.classList.add("active");
+//       if (el.dataset.vidType === "reveal") activeVid = vid;
+//       if (el.dataset.vidType === "rotate") activeRotateVid = vid;
 //     }
 //   });
 // }
@@ -191,26 +185,30 @@ function seActiveRevealAndRotateVids(datasetAction) {
   allVidCode.forEach(function (el) {
     const vid = el.querySelector(".vid");
     const source = vid.querySelector("source");
+    if (!source) return;
 
     // 1. If it's NOT the active product, kill the connection to save data
     if (el.dataset.product !== datasetAction) {
       vid.pause();
-      source.src = ""; // Empty the source
-      vid.load(); // Clear the buffer
+      source.src = "";
+      vid.load();
       el.classList.remove("active");
       return;
     }
 
-    // 2. If it IS the active product, load it now
-    if (el.dataset.vidType === "reveal" || el.dataset.vidType === "rotate") {
-      // Only set the src if it's empty (prevents re-loading)
-      if (source.src !== source.dataset.src) {
-        source.src = source.dataset.src;
-        vid.load();
-      }
-      el.classList.add("active");
-      if (el.dataset.vidType === "reveal") activeVid = vid;
-      if (el.dataset.vidType === "rotate") activeRotateVid = vid;
+    // 2. If it IS the active product, load the data
+    if (source.src !== source.dataset.src) {
+      source.src = source.dataset.src;
+      vid.load();
+    }
+
+    // --- THE SEQUENCE LOGIC ---
+    if (el.dataset.vidType === "reveal") {
+      el.classList.add("active"); // SHOW the Reveal video
+      activeVid = vid; // Set this as the one to .play() immediately
+    } else if (el.dataset.vidType === "rotate") {
+      el.classList.remove("active"); // HIDE the Rotate video (for now)
+      activeRotateVid = vid; // Store reference for the 'ended' hand-off
     }
   });
 }
