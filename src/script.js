@@ -235,7 +235,8 @@ function toggleMobileProductOpts() {
     activeVidDiv.style.display = "block";
     document.querySelector(".drag-wrap").classList.add("active");
     // 3. iPhone Visibility Fixes
-    activeTxtWrap.style.display = "block";
+    // activeTxtWrap.style.display = "block";
+    activeTxtWrap.classList.add("active");
     activeTxtWrap.style.visibility = "visible"; // Force visibility
     activeTxtWrap.style.opacity = "1"; // Force opacity
     activeTxtWrap.style.zIndex = "10"; // Force to the front
@@ -248,6 +249,7 @@ function toggleMobileProductOpts() {
     document.querySelector(".broch-prods-btns-wrap").style.display = "none";
     activeVidDiv.style.display = "none";
     document.querySelector(".drag-wrap").classList.remove("active");
-    activeTxtWrap.style.display = "none";
+    // activeTxtWrap.style.display = "none";
+    activeTxtWrap.classList.remove("active");
   }
 }
