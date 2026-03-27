@@ -66,24 +66,23 @@ allVids.forEach(function (el) {
   });
 });
 
-document.addEventListener(
-  "touchstart",
-  function () {
-    allVids.forEach((vid) => {
-      // Play for a split second then pause to force a buffer fill
-      vid
-        .play()
-        .then(() => {
-          vid.pause();
-        })
-        .catch((err) => console.log("Buffering initiated"));
-    });
-  },
-  { once: true },
-); // Only runs on the very first tap
-
-//GSAP SLIDER EVENTS
+//TOUCHSTART INIT AND GSAP SLIDER EVENTS
 document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener(
+    "touchstart",
+    function () {
+      allVids.forEach((vid) => {
+        // Play for a split second then pause to force a buffer fill
+        vid
+          .play()
+          .then(() => {
+            vid.pause();
+          })
+          .catch((err) => console.log("Buffering initiated"));
+      });
+    },
+    { once: true },
+  ); // Only runs on the very first tap
   gsap.registerPlugin(Draggable);
   function updateVideo(instance) {
     if (activeVid && activeVid.duration) {
@@ -163,31 +162,59 @@ function setActiveTxt(datasetAction) {
     if (el.dataset.product === datasetAction) el.classList.add("active");
   });
 }
+// function seActiveRevealAndRotateVids(datasetAction) {
+//   allVidCode.forEach(function (el) {
+//     el.querySelector(".vid").currentTime = 0;
+//     el.querySelector(".vid").pause();
+//     el.querySelector(".vid").preload = "metadata";
+//     el.querySelector(".vid").load();
+//     el.classList.remove("active");
+//     if (
+//       el.dataset.product === datasetAction &&
+//       el.dataset.vidType === "reveal" &&
+//       window.getComputedStyle(el).display !== "none"
+//     ) {
+//       el.classList.add("active");
+//       activeVid = el.querySelector(".vid");
+//       activeVid.preload = "auto";
+//     }
+//     if (
+//       el.dataset.product === datasetAction &&
+//       el.dataset.vidType === "rotate" &&
+//       window.getComputedStyle(el).display !== "none"
+//     ) {
+//       activeRotateVid = el.querySelector(".vid");
+//     }
+//   });
+// }
 function seActiveRevealAndRotateVids(datasetAction) {
   allVidCode.forEach(function (el) {
-    el.querySelector(".vid").currentTime = 0;
-    el.querySelector(".vid").pause();
-    el.querySelector(".vid").preload = "metadata";
-    el.querySelector(".vid").load();
-    el.classList.remove("active");
-    if (
-      el.dataset.product === datasetAction &&
-      el.dataset.vidType === "reveal" &&
-      window.getComputedStyle(el).display !== "none"
-    ) {
-      el.classList.add("active");
-      activeVid = el.querySelector(".vid");
-      activeVid.preload = "auto";
+    const vid = el.querySelector(".vid");
+    const source = vid.querySelector("source");
+
+    // 1. If it's NOT the active product, kill the connection to save data
+    if (el.dataset.product !== datasetAction) {
+      vid.pause();
+      source.src = ""; // Empty the source
+      vid.load(); // Clear the buffer
+      el.classList.remove("active");
+      return;
     }
-    if (
-      el.dataset.product === datasetAction &&
-      el.dataset.vidType === "rotate" &&
-      window.getComputedStyle(el).display !== "none"
-    ) {
-      activeRotateVid = el.querySelector(".vid");
+
+    // 2. If it IS the active product, load it now
+    if (el.dataset.vidType === "reveal" || el.dataset.vidType === "rotate") {
+      // Only set the src if it's empty (prevents re-loading)
+      if (source.src !== source.dataset.src) {
+        source.src = source.dataset.src;
+        vid.load();
+      }
+      el.classList.add("active");
+      if (el.dataset.vidType === "reveal") activeVid = vid;
+      if (el.dataset.vidType === "rotate") activeRotateVid = vid;
     }
   });
 }
+
 function resetDragControl() {
   // 1. Reset the activeVid immediately
   activeVid.currentTime = 0;
