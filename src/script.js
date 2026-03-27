@@ -231,7 +231,7 @@ function toggleMobileProductOpts() {
     txtAndBtnsWrap.style.setProperty("height", "20rem", "important");
     // 2. Standard toggles
     document.querySelector(".btns-grid").classList.remove("active");
-    document.querySelector(".broch-prods-btns-wrap").style.display = "flex";
+    // document.querySelector(".broch-prods-btns-wrap").style.display = "flex";
     // activeVidDiv.style.display = "block";
     activeVidDiv.classList.add("active");
     document.querySelector(".drag-wrap").classList.add("active");
@@ -247,7 +247,7 @@ function toggleMobileProductOpts() {
   } else {
     txtAndBtnsWrap.style.height = "100%";
     document.querySelector(".btns-grid").classList.add("active");
-    document.querySelector(".broch-prods-btns-wrap").style.display = "none";
+    // document.querySelector(".broch-prods-btns-wrap").style.display = "none";
     // activeVidDiv.style.display = "none";
     activeVidDiv.classList.remove("active");
     document.querySelector(".drag-wrap").classList.remove("active");
