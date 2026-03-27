@@ -4,6 +4,8 @@ const navBar = document.querySelector(".nav_component");
 const allNavLinks = navBar.querySelectorAll(".nav_menu_link-wrap");
 const mainWrap = document.querySelector(".main-wrapper");
 const blackout = document.querySelector(".blackout-section");
+const txtAndBtnsWrap = document.querySelector(".txt-and-btns-wrap");
+const activeAllTxtWrap = document.querySelector(".all-txt-wrap");
 const allTxtWraps = [...document.querySelectorAll(".txt-wrap")];
 const allVidDivs = [...document.querySelectorAll(".vid-div")];
 const allVidCode = [...document.querySelectorAll(".vid-code")];
@@ -224,30 +226,28 @@ function resetDragControl() {
   });
 }
 function toggleMobileProductOpts() {
-  const wrap = document.querySelector(".txt-and-btns-wrap");
-  const allTxt = document.querySelector(".all-txt-wrap");
   if (mobileSelectedProductView) {
     // 1. Force a height that Safari cannot ignore
-    wrap.style.setProperty("height", "45vh", "important");
+    txtAndBtnsWrap.style.setProperty("height", "20rem", "important");
     // 2. Standard toggles
     document.querySelector(".btns-grid").classList.remove("active");
     document.querySelector(".broch-prods-btns-wrap").style.display = "flex";
     activeVidDiv.style.display = "block";
     document.querySelector(".drag-wrap").classList.add("active");
     // 3. iPhone Visibility Fixes
-    allTxt.style.display = "block";
-    allTxt.style.visibility = "visible"; // Force visibility
-    allTxt.style.opacity = "1"; // Force opacity
-    allTxt.style.zIndex = "9999"; // Force to the front
-    allTxt.style.position = "relative"; // Required for z-index to work
+    activeAllTxtWrap.style.display = "block";
+    activeAllTxtWrap.style.visibility = "visible"; // Force visibility
+    activeAllTxtWrap.style.opacity = "1"; // Force opacity
+    activeAllTxtWrap.style.zIndex = "10"; // Force to the front
+    activeAllTxtWrap.style.position = "relative"; // Required for z-index to work
     // 4. The "Magic" Reflow (Critical for iOS)
-    void allTxt.offsetHeight;
+    void activeAllTxtWrap.offsetHeight;
   } else {
-    wrap.style.height = "100%";
+    txtAndBtnsWrap.style.height = "100%";
     document.querySelector(".btns-grid").classList.add("active");
     document.querySelector(".broch-prods-btns-wrap").style.display = "none";
     activeVidDiv.style.display = "none";
     document.querySelector(".drag-wrap").classList.remove("active");
-    allTxt.style.display = "none";
+    activeAllTxtWrap.style.display = "none";
   }
 }
