@@ -65,6 +65,23 @@ allVids.forEach(function (el) {
     dragWrap.classList.add("active");
   });
 });
+
+document.addEventListener(
+  "touchstart",
+  function () {
+    allVids.forEach((vid) => {
+      // Play for a split second then pause to force a buffer fill
+      vid
+        .play()
+        .then(() => {
+          vid.pause();
+        })
+        .catch((err) => console.log("Buffering initiated"));
+    });
+  },
+  { once: true },
+); // Only runs on the very first tap
+
 //GSAP SLIDER EVENTS
 document.addEventListener("DOMContentLoaded", () => {
   gsap.registerPlugin(Draggable);
@@ -111,14 +128,6 @@ document.addEventListener("DOMContentLoaded", () => {
       },
     });
   });
-  // function updateVideo(instance) {
-  //   let progress = instance.x / instance.maxX;
-  //   activeVid.currentTime = progress * activeVid.duration;
-  // }
-  // // 3. Handle window resizing to keep bounds accurate
-  // window.addEventListener("resize", () => {
-  //   Draggable.get(".drag-handle").applyBounds(".drag-track");
-  // });
   let isSeeking = false; // The "lock" to prevent over-taxing the CPU
 
   function updateVideo(instance) {
