@@ -265,13 +265,13 @@ function initScrollNext() {
       scrollTo: { y: sections[nextSectionIndex], autoKill: false },
       ease: "power2.inOut",
       onComplete: () => {
-        // 2. Re-enable snapping once the animation finishes
-        toggleSnap(true);
         // Notify your app here
         const activeId = sections[nextSectionIndex].id;
         sectionReached(activeId);
         // Your existing hash update
         if (activeId) history.pushState(null, null, `#${activeId}`);
+        // 2. Re-enable snapping once the animation finishes
+        toggleSnap(true);
       },
     });
   });
