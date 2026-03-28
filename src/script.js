@@ -187,61 +187,116 @@ function startApp() {
 }
 // Start the check as soon as the script loads
 startApp();
+// function initScrollNext() {
+//   //for scroll-snapping
+//   const nextBtn = document.querySelector(".btn.scroll-next-btn");
+//   if (!nextBtn || sections.length === 0) return;
+//   nextBtn.addEventListener("click", () => {
+//     // 1. Kill the snap so the browser stops fighting
+//     toggleSnap(false);
+//     // 1. Determine which section is currently in view
+//     let currentSectionIndex = sections.findIndex((section) => {
+//       const rect = section.getBoundingClientRect();
+//       // Check if the top of the section is roughly at the top of the viewport
+//       return rect.top >= -100 && rect.top <= 100;
+//     });
+//     // 2. Find the next section (or loop back to the first)
+//     let nextSectionIndex = (currentSectionIndex + 1) % sections.length;
+//     const targetSection = sections[nextSectionIndex];
+//     // 3. GSAP Scroll to that section
+//     gsap.to(window, {
+//       duration: 0.8,
+//       scrollTo: { y: targetSection, autoKill: false },
+//       ease: "power2.inOut",
+//       onComplete: () => {
+//         sectionReached(targetSection.id);
+//         if (targetSection.id)
+//           history.pushState(null, null, `#${targetSection.id}`);
+
+//         // 1. Force the position one more time with GSAP to "lock" it
+//         gsap.set(window, { scrollTo: { y: targetSection, autoKill: false } });
+
+//         // 2. The re-enable logic we used before
+//         const reEnable = () => {
+//           toggleSnap(true);
+//           window.removeEventListener("touchstart", reEnable);
+//           window.removeEventListener("wheel", reEnable);
+//         };
+
+//         window.addEventListener("touchstart", reEnable, { passive: true });
+//         window.addEventListener("wheel", reEnable, { passive: true });
+//       },
+//     });
+//   });
+// }
+// function toggleSnap(enabled) {
+//   const container = document.documentElement;
+//   const sections = document.querySelectorAll(".section");
+//   if (enabled) {
+//     container.style.scrollSnapType = "y mandatory";
+//     sections.forEach((s) => (s.style.scrollSnapAlign = "start"));
+//   } else {
+//     container.style.scrollSnapType = "none";
+//     sections.forEach((s) => (s.style.scrollSnapAlign = "none"));
+//     container.style.scrollPaddingTop = "1px";
+//     requestAnimationFrame(() => {
+//       container.style.scrollPaddingTop = "0px";
+//     });
+//   }
+// }
 function initScrollNext() {
-  //for scroll-snapping
   const nextBtn = document.querySelector(".btn.scroll-next-btn");
   if (!nextBtn || sections.length === 0) return;
   nextBtn.addEventListener("click", () => {
-    // 1. Kill the snap so the browser stops fighting
+    // 1. Safety: Ignore clicks if we are already moving
+    if (gsap.isTweening(window)) return;
+    // 2. Kill the "magnets" so the browser stops fighting the JS move
     toggleSnap(false);
-    // 1. Determine which section is currently in view
+    // 3. Find current and next section index
     let currentSectionIndex = sections.findIndex((section) => {
       const rect = section.getBoundingClientRect();
-      // Check if the top of the section is roughly at the top of the viewport
+      // Use 100px buffer to account for mobile address bar shifts
       return rect.top >= -100 && rect.top <= 100;
     });
-    // 2. Find the next section (or loop back to the first)
     let nextSectionIndex = (currentSectionIndex + 1) % sections.length;
     const targetSection = sections[nextSectionIndex];
-    // 3. GSAP Scroll to that section
+    const targetPos = targetSection.offsetTop;
+    // 4. GSAP Scroll to the target
     gsap.to(window, {
       duration: 0.8,
       scrollTo: { y: targetSection, autoKill: false },
       ease: "power2.inOut",
       onComplete: () => {
-        sectionReached(targetSection.id);
-        if (targetSection.id)
-          history.pushState(null, null, `#${targetSection.id}`);
-
-        // 1. Force the position one more time with GSAP to "lock" it
-        gsap.set(window, { scrollTo: { y: targetSection, autoKill: false } });
-
-        // 2. The re-enable logic we used before
-        const reEnable = () => {
+        // 5. THE IOS FIX: Force a native scroll event while snapping is still OFF.
+        // This tells Safari's internal engine "We are definitely here."
+        window.scrollTo(0, targetPos);
+        // 6. Update App State & URL
+        const activeId = targetSection.id;
+        sectionReached(activeId);
+        if (activeId) history.pushState(null, null, `#${activeId}`);
+        // 7. Handover: Wait for the browser to "settle" at the new pixel
+        // before turning the magnetic snapping back on.
+        setTimeout(() => {
           toggleSnap(true);
-          window.removeEventListener("touchstart", reEnable);
-          window.removeEventListener("wheel", reEnable);
-        };
 
-        window.addEventListener("touchstart", reEnable, { passive: true });
-        window.addEventListener("wheel", reEnable, { passive: true });
+          // Final "Nudge" to ensure the Snap Index is updated
+          window.scrollBy(0, 1);
+          window.scrollBy(0, -1);
+        }, 150);
       },
     });
   });
 }
 function toggleSnap(enabled) {
   const container = document.documentElement;
-  const sections = document.querySelectorAll(".section");
+  const allSections = document.querySelectorAll(".section");
   if (enabled) {
     container.style.scrollSnapType = "y mandatory";
-    sections.forEach((s) => (s.style.scrollSnapAlign = "start"));
+    allSections.forEach((s) => (s.style.scrollSnapAlign = "start"));
   } else {
+    // Kill the type and the alignment so there is no "memory" of Section 1
     container.style.scrollSnapType = "none";
-    sections.forEach((s) => (s.style.scrollSnapAlign = "none"));
-    container.style.scrollPaddingTop = "1px";
-    requestAnimationFrame(() => {
-      container.style.scrollPaddingTop = "0px";
-    });
+    allSections.forEach((s) => (s.style.scrollSnapAlign = "none"));
   }
 }
 function sectionReached(id) {
