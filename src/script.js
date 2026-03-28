@@ -216,6 +216,11 @@ function initScrollNext() {
         // 2. Re-enable snapping after short delay
         setTimeout(() => {
           toggleSnap(true);
+          // Force the browser to "realize" it's at a new snap point.
+          // We scroll 1px away and 1px back instantly.
+          const currentY = window.scrollY;
+          window.scrollTo(0, currentY + 1);
+          window.scrollTo(0, currentY);
           // 3. The "Anchor" - Tell the browser "We are definitely here"
           window.scrollTo(0, targetSection.offsetTop);
         }, 50);
@@ -233,7 +238,6 @@ function initScrollNext() {
 function toggleSnap(enabled) {
   // Target all your sections
   const sections = document.querySelectorAll(".section");
-
   sections.forEach((section) => {
     // If disabled, remove the alignment so there's nothing to snap TO
     section.style.scrollSnapAlign = enabled ? "start" : "none";
