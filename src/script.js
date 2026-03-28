@@ -84,7 +84,7 @@ function startApp() {
 
   if (stp) {
     gsap.registerPlugin(stp);
-    ScrollTrigger.normalizeScroll(true);
+    // ScrollTrigger.normalizeScroll(true);
 
     initScrollNext();
   } else {
