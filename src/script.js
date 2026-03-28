@@ -230,14 +230,16 @@ function initScrollNext() {
 //   document.body.style.scrollSnapType = enabled ? "y mandatory" : "none";
 // }
 function toggleSnap(enabled) {
-  const mode = enabled ? "y mandatory" : "none";
-  // Adding overflow hidden prevents iOS from tracking manual scroll momentum during the JS tween
-  const overflow = enabled ? "scroll" : "hidden";
+  // Use 'proximity' instead of 'none' during the move
+  // This keeps the scroll engine "warm" without the magnetic pull
+  const mode = enabled ? "y mandatory" : "y proximity";
 
   document.documentElement.style.scrollSnapType = mode;
-  document.documentElement.style.overflowY = overflow;
   document.body.style.scrollSnapType = mode;
-  document.body.style.overflowY = overflow;
+
+  // Ensure overflow remains 'scroll' so GSAP can actually move the page
+  document.documentElement.style.overflowY = "scroll";
+  document.body.style.overflowY = "scroll";
 }
 
 function sectionReached(id) {
