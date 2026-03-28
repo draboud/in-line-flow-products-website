@@ -74,73 +74,7 @@ allVids.forEach(function (el) {
     dragWrap.classList.add("active");
   });
 });
-//......................................................
-// //SCROLL SNAPPING
-// function startApp() {
-//   // Check every possible global location for the plugin
-//   const stp =
-//     window.ScrollToPlugin ||
-//     (window.gsap && window.gsap.plugins && window.gsap.plugins.scrollTo);
-//   if (stp) {
-//     gsap.registerPlugin(stp);
-//     initScrollNext();
-//   } else {
-//     // If not found yet, wait 50ms and try again
-//     setTimeout(startApp, 50);
-//   }
-//   const observerOptions = {
-//     root: null, // use the viewport
-//     threshold: 0.6, // fire when 60% of the section is visible
-//   };
-//   const observer = new IntersectionObserver((entries) => {
-//     entries.forEach((entry) => {
-//       if (entry.isIntersecting) {
-//         // Only notify if the scroll wasn't triggered by the button (to avoid double-firing)
-//         if (!gsap.isTweening(window)) {
-//           sectionReached(entry.target.id);
-//         }
-//       }
-//     });
-//   }, observerOptions);
-//   // Tell the observer to watch every section
-//   sections.forEach((section) => observer.observe(section));
-// }
-function startApp() {
-  // Check for both ScrollTo and ScrollTrigger
-  const stp =
-    window.ScrollToPlugin ||
-    (window.gsap && window.gsap.plugins && window.gsap.plugins.scrollTo);
-  const str = window.ScrollTrigger;
-  if (stp && str) {
-    // Register BOTH here
-    gsap.registerPlugin(stp, str);
-    // 1. Initialize your custom logic
-    initScrollNext();
-    // 2. Setup the Observer ONLY ONCE after plugins are ready
-    const observerOptions = {
-      root: null,
-      threshold: 0.6,
-    };
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          // Check if GSAP is currently animating a scroll
-          if (!gsap.isTweening(window)) {
-            sectionReached(entry.target.id);
-          }
-        }
-      });
-    }, observerOptions);
-    sections.forEach((section) => observer.observe(section));
-  } else {
-    // If not found yet, wait and try again
-    setTimeout(startApp, 50);
-  }
-}
-// Start the check as soon as the script loads
-startApp();
-//......................................................
-//TOUCHSTART INIT, AND GSAP SLIDER EVENTS
+//touchstart init, GSAP slider
 document.addEventListener("DOMContentLoaded", () => {
   function updateVideo(instance) {
     // 1. Safety checks: Ensure there is a video and it has a duration
@@ -218,29 +152,41 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 //......................................................
 //FUNCTIONS.............................................
-// Helper to toggle snapping
-function toggleSnap(enabled) {
-  document.documentElement.style.scrollSnapType = enabled
-    ? "y mandatory"
-    : "none";
-  document.body.style.scrollSnapType = enabled ? "y mandatory" : "none";
+//SCROLL SNAPPING
+function startApp() {
+  // Check for both ScrollTo and ScrollTrigger
+  const stp =
+    window.ScrollToPlugin ||
+    (window.gsap && window.gsap.plugins && window.gsap.plugins.scrollTo);
+  const str = window.ScrollTrigger;
+  if (stp && str) {
+    // Register BOTH here
+    gsap.registerPlugin(stp, str);
+    // 1. Initialize your custom logic
+    initScrollNext();
+    // 2. Setup the Observer ONLY ONCE after plugins are ready
+    const observerOptions = {
+      root: null,
+      threshold: 0.6,
+    };
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          // Check if GSAP is currently animating a scroll
+          if (!gsap.isTweening(window)) {
+            sectionReached(entry.target.id);
+          }
+        }
+      });
+    }, observerOptions);
+    sections.forEach((section) => observer.observe(section));
+  } else {
+    // If not found yet, wait and try again
+    setTimeout(startApp, 50);
+  }
 }
-
-// function startApp() {
-//   const stp =
-//     window.ScrollToPlugin ||
-//     (window.gsap && window.gsap.plugins && window.gsap.plugins.scrollTo);
-//   const str = window.ScrollTrigger;
-
-//   if (stp && str) {
-//     gsap.registerPlugin(stp, str);
-
-//     initScrollNext();
-//     setupObserver();
-//   } else {
-//     setTimeout(startApp, 50);
-//   }
-// }
+// Start the check as soon as the script loads
+startApp();
 function initScrollNext() {
   //for scroll-snapping
   const nextBtn = document.querySelector(".btn.scroll-next-btn");
@@ -257,9 +203,6 @@ function initScrollNext() {
     // 2. Find the next section (or loop back to the first)
     let nextSectionIndex = (currentSectionIndex + 1) % sections.length;
     const targetSection = sections[nextSectionIndex];
-    // if (nextSectionIndex >= sections.length) {
-    //   nextSectionIndex = 0; // Optional: Loop to start
-    // }
     // 3. GSAP Scroll to that section
     gsap.to(window, {
       duration: 0.8,
@@ -278,6 +221,13 @@ function initScrollNext() {
       },
     });
   });
+}
+// Helper to toggle snapping
+function toggleSnap(enabled) {
+  document.documentElement.style.scrollSnapType = enabled
+    ? "y mandatory"
+    : "none";
+  document.body.style.scrollSnapType = enabled ? "y mandatory" : "none";
 }
 function sectionReached(id) {
   allNavLinks.forEach(function (el) {
