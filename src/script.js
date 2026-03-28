@@ -244,61 +244,138 @@ startApp();
 //     });
 //   }
 // }
+
+// function initScrollNext() {
+//   const nextBtn = document.querySelector(".btn.scroll-next-btn");
+//   if (!nextBtn || sections.length === 0) return;
+//   nextBtn.addEventListener("click", () => {
+//     // 1. Safety: Ignore clicks if we are already moving
+//     if (gsap.isTweening(window)) return;
+//     // 2. Kill the "magnets" so the browser stops fighting the JS move
+//     toggleSnap(false);
+//     // 3. Find current and next section index
+//     let currentSectionIndex = sections.findIndex((section) => {
+//       const rect = section.getBoundingClientRect();
+//       // Use 100px buffer to account for mobile address bar shifts
+//       return rect.top >= -100 && rect.top <= 100;
+//     });
+//     let nextSectionIndex = (currentSectionIndex + 1) % sections.length;
+//     const targetSection = sections[nextSectionIndex];
+//     const targetPos = targetSection.offsetTop;
+//     // 4. GSAP Scroll to the target
+//     gsap.to(window, {
+//       duration: 0.8,
+//       scrollTo: { y: targetSection, autoKill: false },
+//       ease: "power2.inOut",
+//       onComplete: () => {
+//         // 5. THE IOS FIX: Force a native scroll event while snapping is still OFF.
+//         // This tells Safari's internal engine "We are definitely here."
+//         window.scrollTo(0, targetPos);
+//         // 6. Update App State & URL
+//         const activeId = targetSection.id;
+//         sectionReached(activeId);
+//         if (activeId) history.pushState(null, null, `#${activeId}`);
+//         // 7. Handover: Wait for the browser to "settle" at the new pixel
+//         // before turning the magnetic snapping back on.
+//         setTimeout(() => {
+//           toggleSnap(true);
+
+//           // Final "Nudge" to ensure the Snap Index is updated
+//           window.scrollBy(0, 1);
+//           window.scrollBy(0, -1);
+//         }, 150);
+//       },
+//     });
+//   });
+// }
+// function toggleSnap(enabled) {
+//   const container = document.documentElement;
+//   const allSections = document.querySelectorAll(".section");
+//   if (enabled) {
+//     container.style.scrollSnapType = "y mandatory";
+//     allSections.forEach((s) => (s.style.scrollSnapAlign = "start"));
+//   } else {
+//     // Kill the type and the alignment so there is no "memory" of Section 1
+//     container.style.scrollSnapType = "none";
+//     allSections.forEach((s) => (s.style.scrollSnapAlign = "none"));
+//   }
+// }
+
 function initScrollNext() {
   const nextBtn = document.querySelector(".btn.scroll-next-btn");
   if (!nextBtn || sections.length === 0) return;
+
   nextBtn.addEventListener("click", () => {
     // 1. Safety: Ignore clicks if we are already moving
     if (gsap.isTweening(window)) return;
-    // 2. Kill the "magnets" so the browser stops fighting the JS move
-    toggleSnap(false);
+
+    // 2. THE KILL: Completely disable snapping and lock overflow
+    // to stop Safari's "ghost" scroll thread from tracking the move.
+    document.documentElement.style.scrollSnapType = "none";
+    document.body.style.scrollSnapType = "none";
+    document.body.style.overflow = "hidden";
+
     // 3. Find current and next section index
     let currentSectionIndex = sections.findIndex((section) => {
       const rect = section.getBoundingClientRect();
-      // Use 100px buffer to account for mobile address bar shifts
       return rect.top >= -100 && rect.top <= 100;
     });
+
     let nextSectionIndex = (currentSectionIndex + 1) % sections.length;
     const targetSection = sections[nextSectionIndex];
     const targetPos = targetSection.offsetTop;
+
     // 4. GSAP Scroll to the target
     gsap.to(window, {
-      duration: 0.8,
+      duration: 0.7,
       scrollTo: { y: targetSection, autoKill: false },
       ease: "power2.inOut",
       onComplete: () => {
-        // 5. THE IOS FIX: Force a native scroll event while snapping is still OFF.
-        // This tells Safari's internal engine "We are definitely here."
-        window.scrollTo(0, targetPos);
-        // 6. Update App State & URL
-        const activeId = targetSection.id;
-        sectionReached(activeId);
-        if (activeId) history.pushState(null, null, `#${activeId}`);
-        // 7. Handover: Wait for the browser to "settle" at the new pixel
-        // before turning the magnetic snapping back on.
-        setTimeout(() => {
-          toggleSnap(true);
+        // 5. THE NUCLEAR REFLOW: Force a layout change to wipe Safari's cache
+        document.body.style.height = "100.1%";
 
-          // Final "Nudge" to ensure the Snap Index is updated
-          window.scrollBy(0, 1);
-          window.scrollBy(0, -1);
-        }, 150);
+        requestAnimationFrame(() => {
+          // 6. Restore the world
+          document.body.style.height = "100%";
+          document.body.style.overflow = "visible";
+          document.documentElement.style.scrollSnapType = "y mandatory";
+          document.body.style.scrollSnapType = "y mandatory";
+
+          // 7. Final Native Anchor: Tell Safari "We are DEFINITELY here"
+          window.scrollTo(0, targetPos);
+
+          // 8. Update App State & URL
+          const activeId = targetSection.id;
+          sectionReached(activeId);
+          if (activeId) history.pushState(null, null, `#${activeId}`);
+
+          // 9. One last "nudge" for the road
+          setTimeout(() => {
+            window.scrollTo(0, targetPos);
+          }, 50);
+        });
       },
     });
   });
 }
 function toggleSnap(enabled) {
   const container = document.documentElement;
-  const allSections = document.querySelectorAll(".section");
+  const body = document.body;
+
   if (enabled) {
+    // Restore the world
+    body.style.height = "100%";
+    body.style.overflow = "visible";
     container.style.scrollSnapType = "y mandatory";
-    allSections.forEach((s) => (s.style.scrollSnapAlign = "start"));
+    body.style.scrollSnapType = "y mandatory";
   } else {
-    // Kill the type and the alignment so there is no "memory" of Section 1
+    // THE KILL: Completely disable snapping and lock overflow
     container.style.scrollSnapType = "none";
-    allSections.forEach((s) => (s.style.scrollSnapAlign = "none"));
+    body.style.scrollSnapType = "none";
+    body.style.overflow = "hidden"; // Locks Safari's "ghost" thread
   }
 }
+
 function sectionReached(id) {
   allNavLinks.forEach(function (el) {
     el.querySelector(".nav_menu_link-bar").classList.remove("active");
