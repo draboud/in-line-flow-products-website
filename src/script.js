@@ -111,20 +111,16 @@ function startApp() {
     window.ScrollToPlugin ||
     (window.gsap && window.gsap.plugins && window.gsap.plugins.scrollTo);
   const str = window.ScrollTrigger;
-
   if (stp && str) {
     // Register BOTH here
     gsap.registerPlugin(stp, str);
-
     // 1. Initialize your custom logic
     initScrollNext();
-
     // 2. Setup the Observer ONLY ONCE after plugins are ready
     const observerOptions = {
       root: null,
       threshold: 0.6,
     };
-
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
@@ -135,14 +131,12 @@ function startApp() {
         }
       });
     }, observerOptions);
-
     sections.forEach((section) => observer.observe(section));
   } else {
     // If not found yet, wait and try again
     setTimeout(startApp, 50);
   }
 }
-
 // Start the check as soon as the script loads
 startApp();
 //......................................................
@@ -224,11 +218,36 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 //......................................................
 //FUNCTIONS.............................................
+// Helper to toggle snapping
+function toggleSnap(enabled) {
+  document.documentElement.style.scrollSnapType = enabled
+    ? "y mandatory"
+    : "none";
+  document.body.style.scrollSnapType = enabled ? "y mandatory" : "none";
+}
+
+function startApp() {
+  const stp =
+    window.ScrollToPlugin ||
+    (window.gsap && window.gsap.plugins && window.gsap.plugins.scrollTo);
+  const str = window.ScrollTrigger;
+
+  if (stp && str) {
+    gsap.registerPlugin(stp, str);
+
+    initScrollNext();
+    setupObserver();
+  } else {
+    setTimeout(startApp, 50);
+  }
+}
 function initScrollNext() {
   //for scroll-snapping
   const nextBtn = document.querySelector(".btn.scroll-next-btn");
   if (!nextBtn || sections.length === 0) return;
   nextBtn.addEventListener("click", () => {
+    // 1. Kill the snap so the browser stops fighting
+    toggleSnap(false);
     // 1. Determine which section is currently in view
     let currentSectionIndex = sections.findIndex((section) => {
       const rect = section.getBoundingClientRect();
@@ -249,7 +268,6 @@ function initScrollNext() {
         // Notify your app here
         const activeId = sections[nextSectionIndex].id;
         sectionReached(activeId);
-
         // Your existing hash update
         if (activeId) history.pushState(null, null, `#${activeId}`);
       },
@@ -264,9 +282,6 @@ function sectionReached(id) {
     (el) => el.querySelector(".nav_menu_link").innerHTML === id,
   );
   activeNavLink.querySelector(".nav_menu_link-bar").classList.add("active");
-  // setTimeout(function () {
-  //   blackout.classList.remove("active");
-  // }, 250);
 }
 function init() {
   const mobilePortraitQuery = window.matchMedia("(max-width: 479px)");
