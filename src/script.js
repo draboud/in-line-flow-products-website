@@ -226,21 +226,21 @@ function toggleSnap(enabled) {
   document.body.style.scrollSnapType = enabled ? "y mandatory" : "none";
 }
 
-function startApp() {
-  const stp =
-    window.ScrollToPlugin ||
-    (window.gsap && window.gsap.plugins && window.gsap.plugins.scrollTo);
-  const str = window.ScrollTrigger;
+// function startApp() {
+//   const stp =
+//     window.ScrollToPlugin ||
+//     (window.gsap && window.gsap.plugins && window.gsap.plugins.scrollTo);
+//   const str = window.ScrollTrigger;
 
-  if (stp && str) {
-    gsap.registerPlugin(stp, str);
+//   if (stp && str) {
+//     gsap.registerPlugin(stp, str);
 
-    initScrollNext();
-    setupObserver();
-  } else {
-    setTimeout(startApp, 50);
-  }
-}
+//     initScrollNext();
+//     setupObserver();
+//   } else {
+//     setTimeout(startApp, 50);
+//   }
+// }
 function initScrollNext() {
   //for scroll-snapping
   const nextBtn = document.querySelector(".btn.scroll-next-btn");
