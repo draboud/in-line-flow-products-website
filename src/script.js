@@ -74,29 +74,20 @@ allVids.forEach(function (el) {
     dragWrap.classList.add("active");
   });
 });
-//......................................................
-//INITIALIZATIONS.............................................
-// initialize Lenis
-const lenis = new Lenis({
-  autoRaf: true, // Automatically runs the animation loop
-  lerp: 0.1, // Smoothing intensity (0 to 1). Lower is smoother.
-  anchors: true, // CRITICAL: Keeps your section links working perfectly
-  duration: 1.2, // How long the "glide" lasts
-});
-// 1. Listen for the end of a scroll
-lenis.on("scroll", ({ velocity, progress, target }) => {
-  // Velocity 0 means the "glide" has finished
-  if (velocity === 0) {
-    // 2. Find which section is currently at the top of the viewport
-    const sections = document.querySelectorAll(".section");
-    sections.forEach((section) => {
-      const rect = section.getBoundingClientRect();
-      // If the top of the section is within 10px of the top of the screen
-      if (rect.top >= -10 && rect.top <= 10) {
-        blackout.classList.remove("active");
-      }
-    });
-  }
+//Lenis ready...........................................
+window.addEventListener("lenis-ready", () => {
+  window.lenis.on("scroll", ({ velocity, progress, target }) => {
+    if (velocity === 0) {
+      const sections = document.querySelectorAll(".section");
+      sections.forEach((section) => {
+        const rect = section.getBoundingClientRect();
+        // If the top of the section is within 10px of the top of the screen
+        if (rect.top >= -10 && rect.top <= 10) {
+          blackout.classList.remove("active");
+        }
+      });
+    }
+  });
 });
 //touchstart init, GSAP slider
 document.addEventListener("DOMContentLoaded", () => {
