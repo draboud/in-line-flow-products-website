@@ -212,17 +212,19 @@ function initScrollNext() {
         sectionReached(targetSection.id);
         if (targetSection.id)
           history.pushState(null, null, `#${targetSection.id}`);
-        // 2. DO NOT re-enable snapping yet.
-        // We wait for the next touch or scroll to "re-engage" the magnets.
+
+        // 1. Force the position one more time with GSAP to "lock" it
+        gsap.set(window, { scrollTo: { y: targetSection, autoKill: false } });
+
+        // 2. The re-enable logic we used before
         const reEnable = () => {
           toggleSnap(true);
           window.removeEventListener("touchstart", reEnable);
           window.removeEventListener("wheel", reEnable);
         };
+
         window.addEventListener("touchstart", reEnable, { passive: true });
         window.addEventListener("wheel", reEnable, { passive: true });
-        // 3. One native jump to "anchor" the position
-        window.scrollTo(0, targetSection.offsetTop);
       },
     });
   });
@@ -234,12 +236,14 @@ function toggleSnap(enabled) {
     container.style.scrollSnapType = "y mandatory";
     sections.forEach((s) => (s.style.scrollSnapAlign = "start"));
   } else {
-    // Kill EVERYTHING so the browser has zero "memory" of snap points
     container.style.scrollSnapType = "none";
     sections.forEach((s) => (s.style.scrollSnapAlign = "none"));
+    container.style.scrollPaddingTop = "1px";
+    requestAnimationFrame(() => {
+      container.style.scrollPaddingTop = "0px";
+    });
   }
 }
-
 function sectionReached(id) {
   allNavLinks.forEach(function (el) {
     el.querySelector(".nav_menu_link-bar").classList.remove("active");
