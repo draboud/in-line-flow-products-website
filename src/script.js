@@ -223,12 +223,23 @@ function initScrollNext() {
   });
 }
 // Helper to toggle snapping
+// function toggleSnap(enabled) {
+//   document.documentElement.style.scrollSnapType = enabled
+//     ? "y mandatory"
+//     : "none";
+//   document.body.style.scrollSnapType = enabled ? "y mandatory" : "none";
+// }
 function toggleSnap(enabled) {
-  document.documentElement.style.scrollSnapType = enabled
-    ? "y mandatory"
-    : "none";
-  document.body.style.scrollSnapType = enabled ? "y mandatory" : "none";
+  const mode = enabled ? "y mandatory" : "none";
+  // Adding overflow hidden prevents iOS from tracking manual scroll momentum during the JS tween
+  const overflow = enabled ? "scroll" : "hidden";
+
+  document.documentElement.style.scrollSnapType = mode;
+  document.documentElement.style.overflowY = overflow;
+  document.body.style.scrollSnapType = mode;
+  document.body.style.overflowY = overflow;
 }
+
 function sectionReached(id) {
   allNavLinks.forEach(function (el) {
     el.querySelector(".nav_menu_link-bar").classList.remove("active");
