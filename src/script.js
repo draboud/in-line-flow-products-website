@@ -35,8 +35,8 @@ let isSeeking = false; // The "lock" to prevent over-taxing the CPU
 navBar.addEventListener("click", function (e) {
   const clicked = e.target.closest(".nav_menu_link");
   if (!clicked) return;
-  // blackout.classList.add("active");
   if ("navMenuOpen" in navMenu.dataset) navBtn.click();
+  blackout.classList.add("active");
 });
 mainWrap.addEventListener("click", function (e) {
   const clicked = e.target.closest("[data-click-action]");
@@ -76,6 +76,7 @@ allVids.forEach(function (el) {
 });
 //touchstart init, GSAP slider
 document.addEventListener("DOMContentLoaded", () => {
+  blackout.classList.remove("active");
   function updateVideo(instance) {
     // 1. Safety checks: Ensure there is a video and it has a duration
     if (!activeVid || !activeVid.duration) return;
@@ -153,151 +154,95 @@ document.addEventListener("DOMContentLoaded", () => {
 //......................................................
 //FUNCTIONS.............................................
 //SCROLL SNAPPING
-function startApp() {
-  // Check for both ScrollTo and ScrollTrigger
-  const stp =
-    window.ScrollToPlugin ||
-    (window.gsap && window.gsap.plugins && window.gsap.plugins.scrollTo);
-  const str = window.ScrollTrigger;
-  if (stp && str) {
-    // Register BOTH here
-    gsap.registerPlugin(stp, str);
-    // 1. Initialize your custom logic
-    initScrollNext();
-    // 2. Setup the Observer ONLY ONCE after plugins are ready
-    const observerOptions = {
-      root: null,
-      threshold: 0.6,
-    };
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          // Check if GSAP is currently animating a scroll
-          if (!gsap.isTweening(window)) {
-            sectionReached(entry.target.id);
-          }
-        }
-      });
-    }, observerOptions);
-    sections.forEach((section) => observer.observe(section));
-  } else {
-    // If not found yet, wait and try again
-    setTimeout(startApp, 50);
-  }
-}
-// Start the check as soon as the script loads
-startApp();
-function initScrollNext() {
-  //for scroll-snapping
-  const nextBtn = document.querySelector(".btn.scroll-next-btn");
-  if (!nextBtn || sections.length === 0) return;
-  nextBtn.addEventListener("click", () => {
-    // 1. Kill the snap so the browser stops fighting
-    toggleSnap(false);
-    // 1. Determine which section is currently in view
-    let currentSectionIndex = sections.findIndex((section) => {
-      const rect = section.getBoundingClientRect();
-      // Check if the top of the section is roughly at the top of the viewport
-      return rect.top >= -100 && rect.top <= 100;
-    });
-    // 2. Find the next section (or loop back to the first)
-    let nextSectionIndex = (currentSectionIndex + 1) % sections.length;
-    const targetSection = sections[nextSectionIndex];
-    // 3. GSAP Scroll to that section
-    gsap.to(window, {
-      duration: 0.8,
-      scrollTo: { y: targetSection, autoKill: false },
-      ease: "power2.inOut",
-      onComplete: () => {
-        sectionReached(targetSection.id);
-        if (targetSection.id)
-          history.pushState(null, null, `#${targetSection.id}`);
-
-        // 1. Force the position one more time with GSAP to "lock" it
-        gsap.set(window, { scrollTo: { y: targetSection, autoKill: false } });
-
-        // 2. The re-enable logic we used before
-        const reEnable = () => {
-          toggleSnap(true);
-          window.removeEventListener("touchstart", reEnable);
-          window.removeEventListener("wheel", reEnable);
-        };
-
-        window.addEventListener("touchstart", reEnable, { passive: true });
-        window.addEventListener("wheel", reEnable, { passive: true });
-      },
-    });
-  });
-}
-function toggleSnap(enabled) {
-  const container = document.documentElement;
-  const sections = document.querySelectorAll(".section");
-  if (enabled) {
-    container.style.scrollSnapType = "y mandatory";
-    sections.forEach((s) => (s.style.scrollSnapAlign = "start"));
-  } else {
-    container.style.scrollSnapType = "none";
-    sections.forEach((s) => (s.style.scrollSnapAlign = "none"));
-    container.style.scrollPaddingTop = "1px";
-    requestAnimationFrame(() => {
-      container.style.scrollPaddingTop = "0px";
-    });
-  }
-}
-
+// function startApp() {
+//   // Check for both ScrollTo and ScrollTrigger
+//   const stp =
+//     window.ScrollToPlugin ||
+//     (window.gsap && window.gsap.plugins && window.gsap.plugins.scrollTo);
+//   const str = window.ScrollTrigger;
+//   if (stp && str) {
+//     // Register BOTH here
+//     gsap.registerPlugin(stp, str);
+//     // 1. Initialize your custom logic
+//     initScrollNext();
+//     // 2. Setup the Observer ONLY ONCE after plugins are ready
+//     const observerOptions = {
+//       root: null,
+//       threshold: 0.6,
+//     };
+//     const observer = new IntersectionObserver((entries) => {
+//       entries.forEach((entry) => {
+//         if (entry.isIntersecting) {
+//           // Check if GSAP is currently animating a scroll
+//           if (!gsap.isTweening(window)) {
+//             sectionReached(entry.target.id);
+//           }
+//         }
+//       });
+//     }, observerOptions);
+//     sections.forEach((section) => observer.observe(section));
+//   } else {
+//     // If not found yet, wait and try again
+//     setTimeout(startApp, 50);
+//   }
+// }
+// // Start the check as soon as the script loads
+// startApp();
 // function initScrollNext() {
+//   //for scroll-snapping
 //   const nextBtn = document.querySelector(".btn.scroll-next-btn");
 //   if (!nextBtn || sections.length === 0) return;
 //   nextBtn.addEventListener("click", () => {
-//     // 1. Safety: Ignore clicks if we are already moving
-//     if (gsap.isTweening(window)) return;
-//     // 2. Kill the "magnets" so the browser stops fighting the JS move
+//     // 1. Kill the snap so the browser stops fighting
 //     toggleSnap(false);
-//     // 3. Find current and next section index
+//     // 1. Determine which section is currently in view
 //     let currentSectionIndex = sections.findIndex((section) => {
 //       const rect = section.getBoundingClientRect();
-//       // Use 100px buffer to account for mobile address bar shifts
+//       // Check if the top of the section is roughly at the top of the viewport
 //       return rect.top >= -100 && rect.top <= 100;
 //     });
+//     // 2. Find the next section (or loop back to the first)
 //     let nextSectionIndex = (currentSectionIndex + 1) % sections.length;
 //     const targetSection = sections[nextSectionIndex];
-//     const targetPos = targetSection.offsetTop;
-//     // 4. GSAP Scroll to the target
+//     // 3. GSAP Scroll to that section
 //     gsap.to(window, {
 //       duration: 0.8,
 //       scrollTo: { y: targetSection, autoKill: false },
 //       ease: "power2.inOut",
 //       onComplete: () => {
-//         // 5. THE IOS FIX: Force a native scroll event while snapping is still OFF.
-//         // This tells Safari's internal engine "We are definitely here."
-//         window.scrollTo(0, targetPos);
-//         // 6. Update App State & URL
-//         const activeId = targetSection.id;
-//         sectionReached(activeId);
-//         if (activeId) history.pushState(null, null, `#${activeId}`);
-//         // 7. Handover: Wait for the browser to "settle" at the new pixel
-//         // before turning the magnetic snapping back on.
-//         setTimeout(() => {
-//           toggleSnap(true);
+//         sectionReached(targetSection.id);
+//         if (targetSection.id)
+//           history.pushState(null, null, `#${targetSection.id}`);
 
-//           // Final "Nudge" to ensure the Snap Index is updated
-//           window.scrollBy(0, 1);
-//           window.scrollBy(0, -1);
-//         }, 150);
+//         // 1. Force the position one more time with GSAP to "lock" it
+//         gsap.set(window, { scrollTo: { y: targetSection, autoKill: false } });
+
+//         // 2. The re-enable logic we used before
+//         const reEnable = () => {
+//           toggleSnap(true);
+//           window.removeEventListener("touchstart", reEnable);
+//           window.removeEventListener("wheel", reEnable);
+//         };
+
+//         window.addEventListener("touchstart", reEnable, { passive: true });
+//         window.addEventListener("wheel", reEnable, { passive: true });
 //       },
 //     });
 //   });
 // }
 // function toggleSnap(enabled) {
 //   const container = document.documentElement;
-//   const allSections = document.querySelectorAll(".section");
+//   const sections = document.querySelectorAll(".section");
 //   if (enabled) {
 //     container.style.scrollSnapType = "y mandatory";
-//     allSections.forEach((s) => (s.style.scrollSnapAlign = "start"));
+//     sections.forEach((s) => (s.style.scrollSnapAlign = "start"));
 //   } else {
-//     // Kill the type and the alignment so there is no "memory" of Section 1
 //     container.style.scrollSnapType = "none";
-//     allSections.forEach((s) => (s.style.scrollSnapAlign = "none"));
+//     sections.forEach((s) => (s.style.scrollSnapAlign = "none"));
+//     container.style.scrollPaddingTop = "1px";
+//     requestAnimationFrame(() => {
+//       container.style.scrollPaddingTop = "0px";
+//     });
 //   }
 // }
 function sectionReached(id) {
@@ -419,3 +364,25 @@ function toggleMobileProductOpts() {
     blackout.classList.remove("active");
   }, 250);
 }
+// Initialize Lenis
+const lenis = new Lenis({
+  autoRaf: true, // Automatically runs the animation loop
+  lerp: 0.1, // Smoothing intensity (0 to 1). Lower is smoother.
+  anchors: true, // CRITICAL: Keeps your section links working perfectly
+  duration: 1.2, // How long the "glide" lasts
+});
+// 1. Listen for the end of a scroll
+lenis.on("scroll", ({ velocity, progress, target }) => {
+  // Velocity 0 means the "glide" has finished
+  if (velocity === 0) {
+    // 2. Find which section is currently at the top of the viewport
+    const sections = document.querySelectorAll(".section");
+    sections.forEach((section) => {
+      const rect = section.getBoundingClientRect();
+      // If the top of the section is within 10px of the top of the screen
+      if (rect.top >= -10 && rect.top <= 10) {
+        blackout.classList.remove("active");
+      }
+    });
+  }
+});
