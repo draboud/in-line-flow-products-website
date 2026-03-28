@@ -1,11 +1,13 @@
 //.....................................................
 //VID CTRLS DEFINITIONS................................
 const navBar = document.querySelector(".nav_component");
-const allNavLinks = navBar.querySelectorAll(".nav_menu_link-wrap");
+const navMenu = document.querySelector(".nav_menu");
+const navBtn = document.querySelector(".nav_button");
+const allNavLinks = [...navBar.querySelectorAll(".nav_menu_link-wrap")];
+let activeNavLink = allNavLinks[0]; //fix this
 const mainWrap = document.querySelector(".main-wrapper");
-const blackout = document.querySelector(".blackout-section");
+const blackout = document.querySelector(".blackout");
 const txtAndBtnsWrap = document.querySelector(".txt-and-btns-wrap");
-// const activeTxtWrap = document.querySelector(".txt-wrap");
 const allTxtWraps = [...document.querySelectorAll(".txt-wrap")];
 const allVidDivs = [...document.querySelectorAll(".vid-div")];
 const allVidCode = [...document.querySelectorAll(".vid-code")];
@@ -19,6 +21,8 @@ let activeVid = document.querySelectorAll(".vid")[1]; //fix this
 let isMobilePortrait = false;
 //.....................................................
 //GSAP DEFINITIONS.....................................
+const sections = gsap.utils.toArray(".section");
+
 const dragWrap = document.querySelector(".drag-wrap");
 const dragTrack = document.querySelector(".drag-track");
 const dragHandle = document.querySelector(".drag-handle");
@@ -29,9 +33,10 @@ let isSeeking = false; // The "lock" to prevent over-taxing the CPU
 //......................................................
 //EVENTS................................................
 navBar.addEventListener("click", function (e) {
-  const clicked = e.target.closest(".nav_menu_link-wrap");
+  const clicked = e.target.closest(".nav_menu_link");
   if (!clicked) return;
-  activateNavLink(clicked);
+  // blackout.classList.add("active");
+  if ("navMenuOpen" in navMenu.dataset) navBtn.click();
 });
 mainWrap.addEventListener("click", function (e) {
   const clicked = e.target.closest("[data-click-action]");
@@ -69,9 +74,44 @@ allVids.forEach(function (el) {
     dragWrap.classList.add("active");
   });
 });
-//TOUCHSTART INIT AND GSAP SLIDER EVENTS
+//......................................................
+//SCROLL SNAPPING
+function startApp() {
+  // Check every possible global location for the plugin
+  const stp =
+    window.ScrollToPlugin ||
+    (window.gsap && window.gsap.plugins && window.gsap.plugins.scrollTo);
+
+  if (stp) {
+    gsap.registerPlugin(stp);
+    initScrollNext();
+  } else {
+    // If not found yet, wait 50ms and try again
+    setTimeout(startApp, 50);
+  }
+  const observerOptions = {
+    root: null, // use the viewport
+    threshold: 0.6, // fire when 60% of the section is visible
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        // Only notify if the scroll wasn't triggered by the button (to avoid double-firing)
+        if (!gsap.isTweening(window)) {
+          sectionReached(entry.target.id);
+        }
+      }
+    });
+  }, observerOptions);
+  // Tell the observer to watch every section
+  sections.forEach((section) => observer.observe(section));
+}
+// Start the check as soon as the script loads
+startApp();
+//......................................................
+//TOUCHSTART INIT, AND GSAP SLIDER EVENTS
 document.addEventListener("DOMContentLoaded", () => {
-  // Place this inside your DOMContentLoaded block
   function updateVideo(instance) {
     // 1. Safety checks: Ensure there is a video and it has a duration
     if (!activeVid || !activeVid.duration) return;
@@ -86,6 +126,7 @@ document.addEventListener("DOMContentLoaded", () => {
       isSeeking = false; // Unlock for the next frame
     });
   }
+  //touchstart event
   document.addEventListener(
     "touchstart",
     function () {
@@ -119,32 +160,78 @@ document.addEventListener("DOMContentLoaded", () => {
     },
   })[0]; // Draggable.create returns an array; we want the first item
   // --- CLICK TO SNAP LOGIC ---
-  dragTrack.addEventListener("click", (e) => {
-    // Ignore if the user clicked the dragHandle itself
-    if (e.target === dragHandle) return;
-    // Calculate click position relative to dragTrack
-    const dragTrackRect = dragTrack.getBoundingClientRect();
-    const dragHandleWidth = dragHandle.offsetWidth;
-    // Center the dragHandle on the click point
-    let clickX = e.clientX - dragTrackRect.left - dragHandleWidth / 2;
-    // Clamp between 0 and maxX
-    const finalX = Math.max(0, Math.min(clickX, dragInstance.maxX));
-    // Animate dragHandle and sync video
-    gsap.to(dragHandle, {
-      x: finalX,
-      duration: 0.4,
-      ease: "power2.out",
-      onUpdate: () => {
-        // Sync Draggable's internal 'x' during animation
-        dragInstance.update();
-        updateVideo(dragInstance);
-      },
+  if (dragTrack) {
+    dragTrack.addEventListener("click", (e) => {
+      // Ignore if the user clicked the dragHandle itself
+      if (e.target === dragHandle) return;
+      // Calculate click position relative to dragTrack
+      const dragTrackRect = dragTrack.getBoundingClientRect();
+      const dragHandleWidth = dragHandle.offsetWidth;
+      // Center the dragHandle on the click point
+      let clickX = e.clientX - dragTrackRect.left - dragHandleWidth / 2;
+      // Clamp between 0 and maxX
+      const finalX = Math.max(0, Math.min(clickX, dragInstance.maxX));
+      // Animate dragHandle and sync video
+      gsap.to(dragHandle, {
+        x: finalX,
+        duration: 0.4,
+        ease: "power2.out",
+        onUpdate: () => {
+          // Sync Draggable's internal 'x' during animation
+          dragInstance.update();
+          updateVideo(dragInstance);
+        },
+      });
     });
-  });
+  }
   init();
 });
 //......................................................
 //FUNCTIONS.............................................
+function initScrollNext() {
+  //for scroll-snapping
+  const nextBtn = document.querySelector(".btn.scroll-next-btn");
+  if (!nextBtn || sections.length === 0) return;
+  nextBtn.addEventListener("click", () => {
+    // 1. Determine which section is currently in view
+    let currentSectionIndex = sections.findIndex((section) => {
+      const rect = section.getBoundingClientRect();
+      // Check if the top of the section is roughly at the top of the viewport
+      return rect.top >= -50 && rect.top <= 50;
+    });
+    // 2. Find the next section (or loop back to the first)
+    let nextSectionIndex = currentSectionIndex + 1;
+    if (nextSectionIndex >= sections.length) {
+      nextSectionIndex = 0; // Optional: Loop to start
+    }
+    // 3. GSAP Scroll to that section
+    gsap.to(window, {
+      duration: 0.8,
+      scrollTo: { y: sections[nextSectionIndex], autoKill: false },
+      ease: "power2.inOut",
+      onComplete: () => {
+        // Notify your app here
+        const activeId = sections[nextSectionIndex].id;
+        sectionReached(activeId);
+
+        // Your existing hash update
+        if (activeId) history.pushState(null, null, `#${activeId}`);
+      },
+    });
+  });
+}
+function sectionReached(id) {
+  allNavLinks.forEach(function (el) {
+    el.querySelector(".nav_menu_link-bar").classList.remove("active");
+  });
+  activeNavLink = allNavLinks.find(
+    (el) => el.querySelector(".nav_menu_link").innerHTML === id,
+  );
+  activeNavLink.querySelector(".nav_menu_link-bar").classList.add("active");
+  // setTimeout(function () {
+  //   blackout.classList.remove("active");
+  // }, 250);
+}
 function init() {
   const mobilePortraitQuery = window.matchMedia("(max-width: 479px)");
   if (mobilePortraitQuery.matches) {
@@ -157,14 +244,8 @@ function init() {
     setActiveVidDiv();
     setActiveTxt("product-1");
     setActiveRevealAndRotateVids("product-1");
-    activeVid.play();
+    if (activeVid) activeVid.play();
   }
-}
-function activateNavLink(clickedNavLink) {
-  allNavLinks.forEach(function (el) {
-    el.querySelector(".nav_menu_link-bar").classList.remove("active");
-  });
-  clickedNavLink.querySelector(".nav_menu_link-bar").classList.add("active");
 }
 function activateProduct(datasetAction) {
   setActiveTxt(datasetAction);
@@ -188,35 +269,37 @@ function setActiveVidDiv() {
   if (isMobilePortrait) {
     activeVidDiv = allVidDivs.find((el) => el.classList.contains("mp"));
   } else activeVidDiv = allVidDivs.find((el) => !el.classList.contains("mp"));
-  activeVidDiv.classList.add("active");
+  if (activeVidDiv) activeVidDiv.classList.add("active");
 }
 function setActiveRevealAndRotateVids(datasetAction) {
-  activeVidDiv.querySelectorAll(".vid-code").forEach(function (el) {
-    const vid = el.querySelector(".vid");
-    const source = vid.querySelector("source");
-    if (!source) return;
-    // 1. If it's NOT the active product, kill the connection to save data
-    if (el.dataset.product !== datasetAction) {
-      vid.pause();
-      source.src = "";
-      vid.load();
-      el.classList.remove("active");
-      return;
-    }
-    // 2. If it IS the active product, load the data
-    if (source.src !== source.dataset.src) {
-      source.src = source.dataset.src;
-      vid.load();
-    }
-    // --- THE SEQUENCE LOGIC ---
-    if (el.dataset.vidType === "reveal") {
-      el.classList.add("active"); // SHOW the Reveal video
-      activeVid = vid; // Set this as the one to .play() immediately
-    } else if (el.dataset.vidType === "rotate") {
-      el.classList.remove("active"); // HIDE the Rotate video (for now)
-      activeRotateVid = vid; // Store reference for the 'ended' hand-off
-    }
-  });
+  if (activeVidDiv) {
+    activeVidDiv.querySelectorAll(".vid-code").forEach(function (el) {
+      const vid = el.querySelector(".vid");
+      const source = vid.querySelector("source");
+      if (!source) return;
+      // 1. If it's NOT the active product, kill the connection to save data
+      if (el.dataset.product !== datasetAction) {
+        vid.pause();
+        source.src = "";
+        vid.load();
+        el.classList.remove("active");
+        return;
+      }
+      // 2. If it IS the active product, load the data
+      if (source.src !== source.dataset.src) {
+        source.src = source.dataset.src;
+        vid.load();
+      }
+      // --- THE SEQUENCE LOGIC ---
+      if (el.dataset.vidType === "reveal") {
+        el.classList.add("active"); // SHOW the Reveal video
+        activeVid = vid; // Set this as the one to .play() immediately
+      } else if (el.dataset.vidType === "rotate") {
+        el.classList.remove("active"); // HIDE the Rotate video (for now)
+        activeRotateVid = vid; // Store reference for the 'ended' hand-off
+      }
+    });
+  }
 }
 function resetDragControl() {
   // 1. Reset the activeVid immediately
@@ -234,6 +317,7 @@ function resetDragControl() {
   });
 }
 function toggleMobileProductOpts() {
+  blackout.classList.add("active");
   if (mobileSelectedProductView) {
     // 1. Force a height that Safari cannot ignore
     txtAndBtnsWrap.style.setProperty("height", "20rem", "important");
@@ -254,4 +338,7 @@ function toggleMobileProductOpts() {
     document.querySelector(".drag-wrap").classList.remove("active");
     activeTxtWrap.classList.remove("active");
   }
+  setTimeout(function () {
+    blackout.classList.remove("active");
+  }, 250);
 }
