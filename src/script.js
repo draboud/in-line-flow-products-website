@@ -208,16 +208,17 @@ function initScrollNext() {
       duration: 0.8,
       scrollTo: { y: targetSection, autoKill: false },
       ease: "power2.inOut",
+      overwrite: "auto", // Ensure no other tweens interfere
       onComplete: () => {
-        // Notify your app here
         const activeId = targetSection.id;
         sectionReached(activeId);
-        // Your existing hash update
         if (activeId) history.pushState(null, null, `#${activeId}`);
-        // 2. Re-enable snapping once the animation finishes
+        // 2. Re-enable snapping after short delay
         setTimeout(() => {
           toggleSnap(true);
-        }, 200);
+          // 3. The "Anchor" - Tell the browser "We are definitely here"
+          window.scrollTo(0, targetSection.offsetTop);
+        }, 50);
       },
     });
   });
@@ -230,18 +231,14 @@ function initScrollNext() {
 //   document.body.style.scrollSnapType = enabled ? "y mandatory" : "none";
 // }
 function toggleSnap(enabled) {
-  // Use 'proximity' instead of 'none' during the move
-  // This keeps the scroll engine "warm" without the magnetic pull
-  const mode = enabled ? "y mandatory" : "y proximity";
+  // Target all your sections
+  const sections = document.querySelectorAll(".section");
 
-  document.documentElement.style.scrollSnapType = mode;
-  document.body.style.scrollSnapType = mode;
-
-  // Ensure overflow remains 'scroll' so GSAP can actually move the page
-  document.documentElement.style.overflowY = "scroll";
-  document.body.style.overflowY = "scroll";
+  sections.forEach((section) => {
+    // If disabled, remove the alignment so there's nothing to snap TO
+    section.style.scrollSnapAlign = enabled ? "start" : "none";
+  });
 }
-
 function sectionReached(id) {
   allNavLinks.forEach(function (el) {
     el.querySelector(".nav_menu_link-bar").classList.remove("active");
