@@ -213,17 +213,25 @@ function initScrollNext() {
         const activeId = targetSection.id;
         sectionReached(activeId);
         if (activeId) history.pushState(null, null, `#${activeId}`);
-        // 2. Re-enable snapping after short delay
+        // 1. Re-enable the snap-align magnets
+        toggleSnap(true);
+        // 2. THE FIX: Force a native 'Scroll' event
+        // Safari only updates its internal snap index on NATIVE scroll events.
+        // We move 1px and back to trigger that internal update.
+        const targetPos = targetSection.offsetTop;
+        window.scrollTo({
+          top: targetPos + 1,
+          behavior: "auto",
+        });
+        // 3. Settling timeout
         setTimeout(() => {
+          window.scrollTo({
+            top: targetPos,
+            behavior: "auto",
+          });
+          // Final anchor to ensure we are pixel-perfect
           toggleSnap(true);
-          // Force the browser to "realize" it's at a new snap point.
-          // We scroll 1px away and 1px back instantly.
-          const currentY = window.scrollY;
-          window.scrollTo(0, currentY + 1);
-          window.scrollTo(0, currentY);
-          // 3. The "Anchor" - Tell the browser "We are definitely here"
-          window.scrollTo(0, targetSection.offsetTop);
-        }, 50);
+        }, 60);
       },
     });
   });
