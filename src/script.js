@@ -217,7 +217,7 @@ function initScrollNext() {
         // 2. Re-enable snapping once the animation finishes
         setTimeout(() => {
           toggleSnap(true);
-        }, 50);
+        }, 200);
       },
     });
   });
