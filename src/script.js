@@ -252,26 +252,29 @@ function initScrollNext() {
     let currentSectionIndex = sections.findIndex((section) => {
       const rect = section.getBoundingClientRect();
       // Check if the top of the section is roughly at the top of the viewport
-      return rect.top >= -50 && rect.top <= 50;
+      return rect.top >= -100 && rect.top <= 100;
     });
     // 2. Find the next section (or loop back to the first)
-    let nextSectionIndex = currentSectionIndex + 1;
-    if (nextSectionIndex >= sections.length) {
-      nextSectionIndex = 0; // Optional: Loop to start
-    }
+    let nextSectionIndex = (currentSectionIndex + 1) % sections.length;
+    const targetSection = sections[nextSectionIndex];
+    // if (nextSectionIndex >= sections.length) {
+    //   nextSectionIndex = 0; // Optional: Loop to start
+    // }
     // 3. GSAP Scroll to that section
     gsap.to(window, {
       duration: 0.8,
-      scrollTo: { y: sections[nextSectionIndex], autoKill: false },
+      scrollTo: { y: targetSection, autoKill: false },
       ease: "power2.inOut",
       onComplete: () => {
         // Notify your app here
-        const activeId = sections[nextSectionIndex].id;
+        const activeId = targetSection.id;
         sectionReached(activeId);
         // Your existing hash update
         if (activeId) history.pushState(null, null, `#${activeId}`);
         // 2. Re-enable snapping once the animation finishes
-        toggleSnap(true);
+        setTimeout(() => {
+          toggleSnap(true);
+        }, 50);
       },
     });
   });
