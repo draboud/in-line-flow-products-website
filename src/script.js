@@ -208,49 +208,38 @@ function initScrollNext() {
       duration: 0.8,
       scrollTo: { y: targetSection, autoKill: false },
       ease: "power2.inOut",
-      overwrite: "auto", // Ensure no other tweens interfere
       onComplete: () => {
-        const activeId = targetSection.id;
-        const targetPos = targetSection.offsetTop;
-
-        // 1. Update App State & History immediately
-        sectionReached(activeId);
-        if (activeId) history.pushState(null, null, `#${activeId}`);
-
-        // 2. THE FIX: Wait LONGER before turning the magnets back on.
-        // If we turn them on too fast, Safari "panics" and snaps back.
-        setTimeout(() => {
-          // A: Force a native jump to the exact pixel (Magnets are still OFF)
-          window.scrollTo({ top: targetPos, behavior: "auto" });
-
-          // B: Now turn the magnets back on
+        sectionReached(targetSection.id);
+        if (targetSection.id)
+          history.pushState(null, null, `#${targetSection.id}`);
+        // 2. DO NOT re-enable snapping yet.
+        // We wait for the next touch or scroll to "re-engage" the magnets.
+        const reEnable = () => {
           toggleSnap(true);
-
-          // C: One final "Nudge" to lock the browser's index to this section
-          setTimeout(() => {
-            window.scrollBy(0, 1);
-            window.scrollBy(0, -1);
-          }, 50);
-        }, 150); // Increased delay to let iOS "settle"
+          window.removeEventListener("touchstart", reEnable);
+          window.removeEventListener("wheel", reEnable);
+        };
+        window.addEventListener("touchstart", reEnable, { passive: true });
+        window.addEventListener("wheel", reEnable, { passive: true });
+        // 3. One native jump to "anchor" the position
+        window.scrollTo(0, targetSection.offsetTop);
       },
     });
   });
 }
-// Helper to toggle snapping
-// function toggleSnap(enabled) {
-//   document.documentElement.style.scrollSnapType = enabled
-//     ? "y mandatory"
-//     : "none";
-//   document.body.style.scrollSnapType = enabled ? "y mandatory" : "none";
-// }
 function toggleSnap(enabled) {
-  // Target all your sections
+  const container = document.documentElement;
   const sections = document.querySelectorAll(".section");
-  sections.forEach((section) => {
-    // If disabled, remove the alignment so there's nothing to snap TO
-    section.style.scrollSnapAlign = enabled ? "start" : "none";
-  });
+  if (enabled) {
+    container.style.scrollSnapType = "y mandatory";
+    sections.forEach((s) => (s.style.scrollSnapAlign = "start"));
+  } else {
+    // Kill EVERYTHING so the browser has zero "memory" of snap points
+    container.style.scrollSnapType = "none";
+    sections.forEach((s) => (s.style.scrollSnapAlign = "none"));
+  }
 }
+
 function sectionReached(id) {
   allNavLinks.forEach(function (el) {
     el.querySelector(".nav_menu_link-bar").classList.remove("active");
