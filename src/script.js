@@ -304,55 +304,49 @@ startApp();
 function initScrollNext() {
   const nextBtn = document.querySelector(".btn.scroll-next-btn");
   if (!nextBtn || sections.length === 0) return;
-
   nextBtn.addEventListener("click", () => {
     // 1. Safety: Ignore clicks if we are already moving
     if (gsap.isTweening(window)) return;
-
     // 2. THE KILL: Completely disable snapping and lock overflow
     // to stop Safari's "ghost" scroll thread from tracking the move.
     document.documentElement.style.scrollSnapType = "none";
     document.body.style.scrollSnapType = "none";
     document.body.style.overflow = "hidden";
-
     // 3. Find current and next section index
     let currentSectionIndex = sections.findIndex((section) => {
       const rect = section.getBoundingClientRect();
       return rect.top >= -100 && rect.top <= 100;
     });
-
     let nextSectionIndex = (currentSectionIndex + 1) % sections.length;
     const targetSection = sections[nextSectionIndex];
     const targetPos = targetSection.offsetTop;
-
     // 4. GSAP Scroll to the target
     gsap.to(window, {
       duration: 0.7,
       scrollTo: { y: targetSection, autoKill: false },
       ease: "power2.inOut",
       onComplete: () => {
-        // 5. THE NUCLEAR REFLOW: Force a layout change to wipe Safari's cache
-        document.body.style.height = "100.1%";
-
+        const activeId = targetSection.id;
+        const targetPos = targetSection.offsetTop;
+        sectionReached(activeId);
+        if (activeId) history.pushState(null, null, `#${activeId}`);
+        // 1. Restore scrollability FIRST so the following scrolls actually work
+        document.body.style.overflow = "visible";
+        document.body.style.height = "100%";
         requestAnimationFrame(() => {
-          // 6. Restore the world
-          document.body.style.height = "100%";
-          document.body.style.overflow = "visible";
-          document.documentElement.style.scrollSnapType = "y mandatory";
-          document.body.style.scrollSnapType = "y mandatory";
-
-          // 7. Final Native Anchor: Tell Safari "We are DEFINITELY here"
-          window.scrollTo(0, targetPos);
-
-          // 8. Update App State & URL
-          const activeId = targetSection.id;
-          sectionReached(activeId);
-          if (activeId) history.pushState(null, null, `#${activeId}`);
-
-          // 9. One last "nudge" for the road
-          setTimeout(() => {
-            window.scrollTo(0, targetPos);
-          }, 50);
+          // 2. Turn the magnets back on
+          toggleSnap(true);
+          // 3. The 1px Nudge (The "Fake" native scroll)
+          window.scrollTo({ top: targetPos + 1, behavior: "auto" });
+          requestAnimationFrame(() => {
+            window.scrollTo({ top: targetPos, behavior: "auto" });
+            // 4. THE ANCHOR: Manually tell the browser it is now at the new section
+            setTimeout(() => {
+              window.dispatchEvent(new Event("scroll"));
+              // Final pixel-perfect check
+              window.scrollTo(0, targetPos);
+            }, 50);
+          });
         });
       },
     });
@@ -361,7 +355,6 @@ function initScrollNext() {
 function toggleSnap(enabled) {
   const container = document.documentElement;
   const body = document.body;
-
   if (enabled) {
     // Restore the world
     body.style.height = "100%";
