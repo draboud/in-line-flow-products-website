@@ -153,38 +153,69 @@ document.addEventListener("DOMContentLoaded", () => {
 //......................................................
 //FUNCTIONS.............................................
 //SCROLL SNAPPING
+// function startApp() {
+//   // Check for both ScrollTo and ScrollTrigger
+//   const stp =
+//     window.ScrollToPlugin ||
+//     (window.gsap && window.gsap.plugins && window.gsap.plugins.scrollTo);
+//   const str = window.ScrollTrigger;
+//   if (stp && str) {
+//     // Register BOTH here
+//     gsap.registerPlugin(stp, str);
+//     // 1. Initialize your custom logic
+//     initScrollNext();
+//     // 2. Setup the Observer ONLY ONCE after plugins are ready
+//     const observerOptions = {
+//       root: null,
+//       threshold: 0.6,
+//     };
+//     const observer = new IntersectionObserver((entries) => {
+//       entries.forEach((entry) => {
+//         if (entry.isIntersecting) {
+//           // Check if GSAP is currently animating a scroll
+//           if (!gsap.isTweening(window)) {
+//             sectionReached(entry.target.id);
+//           }
+//         }
+//       });
+//     }, observerOptions);
+//     sections.forEach((section) => observer.observe(section));
+//   } else {
+//     // If not found yet, wait and try again
+//     setTimeout(startApp, 50);
+//   }
+// }
 function startApp() {
-  // Check for both ScrollTo and ScrollTrigger
   const stp =
     window.ScrollToPlugin ||
     (window.gsap && window.gsap.plugins && window.gsap.plugins.scrollTo);
   const str = window.ScrollTrigger;
+
   if (stp && str) {
-    // Register BOTH here
     gsap.registerPlugin(stp, str);
-    // 1. Initialize your custom logic
+
+    // THIS REPLACES CSS SNAPPING
+    // It feels the same to the user but stays under JS control
+    // Add this inside your startApp if block
+    ScrollTrigger.create({
+      trigger: "body", // or the wrapper of your sections
+      start: 0,
+      end: "max",
+      snap: {
+        snapTo: 1 / (sections.length - 1), // Calculates snap points based on section count
+        duration: { min: 0.2, max: 0.5 }, // How fast it snaps
+        delay: 0.1, // Wait 0.1s after scroll stops to snap
+        ease: "power1.inOut",
+      },
+    });
+
     initScrollNext();
-    // 2. Setup the Observer ONLY ONCE after plugins are ready
-    const observerOptions = {
-      root: null,
-      threshold: 0.6,
-    };
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          // Check if GSAP is currently animating a scroll
-          if (!gsap.isTweening(window)) {
-            sectionReached(entry.target.id);
-          }
-        }
-      });
-    }, observerOptions);
-    sections.forEach((section) => observer.observe(section));
+    setupObserver();
   } else {
-    // If not found yet, wait and try again
     setTimeout(startApp, 50);
   }
 }
+
 // Start the check as soon as the script loads
 startApp();
 // function initScrollNext() {
@@ -301,57 +332,85 @@ startApp();
 //   }
 // }
 
+// function initScrollNext() {
+//   const nextBtn = document.querySelector(".btn.scroll-next-btn");
+//   if (!nextBtn || sections.length === 0) return;
+//   nextBtn.addEventListener("click", () => {
+//     // 1. Safety: Ignore clicks if we are already moving
+//     if (gsap.isTweening(window)) return;
+//     // 2. THE KILL: Completely disable snapping and lock overflow
+//     // to stop Safari's "ghost" scroll thread from tracking the move.
+//     document.documentElement.style.scrollSnapType = "none";
+//     document.body.style.scrollSnapType = "none";
+//     document.body.style.overflow = "hidden";
+//     // 3. Find current and next section index
+//     let currentSectionIndex = sections.findIndex((section) => {
+//       const rect = section.getBoundingClientRect();
+//       return rect.top >= -100 && rect.top <= 100;
+//     });
+//     let nextSectionIndex = (currentSectionIndex + 1) % sections.length;
+//     const targetSection = sections[nextSectionIndex];
+//     const targetPos = targetSection.offsetTop;
+//     // 4. GSAP Scroll to the target
+//     gsap.to(window, {
+//       duration: 0.7,
+//       scrollTo: { y: targetSection, autoKill: false },
+//       ease: "power2.inOut",
+//       onComplete: () => {
+//         const activeId = targetSection.id;
+//         const targetPos = targetSection.offsetTop;
+//         sectionReached(activeId);
+//         if (activeId) history.pushState(null, null, `#${activeId}`);
+//         // 1. Restore scrollability FIRST so the following scrolls actually work
+//         document.body.style.overflow = "visible";
+//         document.body.style.height = "100%";
+//         requestAnimationFrame(() => {
+//           // 2. Turn the magnets back on
+//           toggleSnap(true);
+//           // 3. The 1px Nudge (The "Fake" native scroll)
+//           window.scrollTo({ top: targetPos + 1, behavior: "auto" });
+//           requestAnimationFrame(() => {
+//             window.scrollTo({ top: targetPos, behavior: "auto" });
+//             // 4. THE ANCHOR: Manually tell the browser it is now at the new section
+//             setTimeout(() => {
+//               window.dispatchEvent(new Event("scroll"));
+//               // Final pixel-perfect check
+//               window.scrollTo(0, targetPos);
+//             }, 50);
+//           });
+//         });
+//       },
+//     });
+//   });
+// }
 function initScrollNext() {
   const nextBtn = document.querySelector(".btn.scroll-next-btn");
   if (!nextBtn || sections.length === 0) return;
+
   nextBtn.addEventListener("click", () => {
-    // 1. Safety: Ignore clicks if we are already moving
     if (gsap.isTweening(window)) return;
-    // 2. THE KILL: Completely disable snapping and lock overflow
-    // to stop Safari's "ghost" scroll thread from tracking the move.
-    document.documentElement.style.scrollSnapType = "none";
-    document.body.style.scrollSnapType = "none";
-    document.body.style.overflow = "hidden";
-    // 3. Find current and next section index
+
     let currentSectionIndex = sections.findIndex((section) => {
       const rect = section.getBoundingClientRect();
       return rect.top >= -100 && rect.top <= 100;
     });
+
     let nextSectionIndex = (currentSectionIndex + 1) % sections.length;
     const targetSection = sections[nextSectionIndex];
-    const targetPos = targetSection.offsetTop;
-    // 4. GSAP Scroll to the target
+
     gsap.to(window, {
-      duration: 0.7,
+      duration: 0.8,
       scrollTo: { y: targetSection, autoKill: false },
       ease: "power2.inOut",
       onComplete: () => {
-        const activeId = targetSection.id;
-        const targetPos = targetSection.offsetTop;
-        sectionReached(activeId);
-        if (activeId) history.pushState(null, null, `#${activeId}`);
-        // 1. Restore scrollability FIRST so the following scrolls actually work
-        document.body.style.overflow = "visible";
-        document.body.style.height = "100%";
-        requestAnimationFrame(() => {
-          // 2. Turn the magnets back on
-          toggleSnap(true);
-          // 3. The 1px Nudge (The "Fake" native scroll)
-          window.scrollTo({ top: targetPos + 1, behavior: "auto" });
-          requestAnimationFrame(() => {
-            window.scrollTo({ top: targetPos, behavior: "auto" });
-            // 4. THE ANCHOR: Manually tell the browser it is now at the new section
-            setTimeout(() => {
-              window.dispatchEvent(new Event("scroll"));
-              // Final pixel-perfect check
-              window.scrollTo(0, targetPos);
-            }, 50);
-          });
-        });
+        sectionReached(targetSection.id);
+        if (targetSection.id)
+          history.pushState(null, null, `#${targetSection.id}`);
       },
     });
   });
 }
+
 function toggleSnap(enabled) {
   const container = document.documentElement;
   const body = document.body;
