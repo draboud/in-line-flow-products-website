@@ -84,6 +84,8 @@ function startApp() {
 
   if (stp) {
     gsap.registerPlugin(stp);
+    ScrollTrigger.normalizeScroll(true);
+
     initScrollNext();
   } else {
     // If not found yet, wait 50ms and try again
