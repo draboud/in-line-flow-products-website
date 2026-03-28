@@ -211,27 +211,27 @@ function initScrollNext() {
       overwrite: "auto", // Ensure no other tweens interfere
       onComplete: () => {
         const activeId = targetSection.id;
+        const targetPos = targetSection.offsetTop;
+
+        // 1. Update App State & History immediately
         sectionReached(activeId);
         if (activeId) history.pushState(null, null, `#${activeId}`);
-        // 1. Re-enable the snap-align magnets
-        toggleSnap(true);
-        // 2. THE FIX: Force a native 'Scroll' event
-        // Safari only updates its internal snap index on NATIVE scroll events.
-        // We move 1px and back to trigger that internal update.
-        const targetPos = targetSection.offsetTop;
-        window.scrollTo({
-          top: targetPos + 1,
-          behavior: "auto",
-        });
-        // 3. Settling timeout
+
+        // 2. THE FIX: Wait LONGER before turning the magnets back on.
+        // If we turn them on too fast, Safari "panics" and snaps back.
         setTimeout(() => {
-          window.scrollTo({
-            top: targetPos,
-            behavior: "auto",
-          });
-          // Final anchor to ensure we are pixel-perfect
+          // A: Force a native jump to the exact pixel (Magnets are still OFF)
+          window.scrollTo({ top: targetPos, behavior: "auto" });
+
+          // B: Now turn the magnets back on
           toggleSnap(true);
-        }, 60);
+
+          // C: One final "Nudge" to lock the browser's index to this section
+          setTimeout(() => {
+            window.scrollBy(0, 1);
+            window.scrollBy(0, -1);
+          }, 50);
+        }, 150); // Increased delay to let iOS "settle"
       },
     });
   });
