@@ -4,7 +4,13 @@ const navBar = document.querySelector(".nav_component");
 const navMenu = document.querySelector(".nav_menu");
 const navBtn = document.querySelector(".nav_button");
 const allNavLinks = [...navBar.querySelectorAll(".nav_menu_link-wrap")];
-let activeNavLink = allNavLinks[0]; //fix this
+const productHomeBtn = document.querySelector(".btn.products-home");
+const productSelectSection = document.getElementById("products");
+const allProductSections = [
+  document.getElementById("closures"),
+  document.getElementById("pigging-tees"),
+];
+const allProductCardLinks = document.querySelectorAll(".product-card-link");
 const mainWrap = document.querySelector(".main-wrapper");
 const blackout = document.querySelector(".blackout");
 const txtAndBtnsWrap = document.querySelector(".txt-and-btns-wrap");
@@ -13,7 +19,10 @@ const allVidDivs = [...document.querySelectorAll(".vid-div")];
 const allVidCode = [...document.querySelectorAll(".vid-code")];
 const allVids = document.querySelectorAll(".vid");
 const allProductsBtns = document.querySelectorAll(".btn.products");
+const allBackBtns = document.querySelectorAll(".back-btn");
 const ctrlBtnWrap = document.querySelector(".section-wrap-btns");
+let activeNavLink = allNavLinks[0]; //fix this
+let activeProductSection = null;
 let activeVidDiv = null;
 let activeTxtWrap = null;
 let activeVidCode = null;
@@ -22,7 +31,6 @@ let isMobilePortrait = false;
 //.....................................................
 //GSAP DEFINITIONS.....................................
 const sections = gsap.utils.toArray(".section");
-
 const dragWrap = document.querySelector(".drag-wrap");
 const dragTrack = document.querySelector(".drag-track");
 const dragHandle = document.querySelector(".drag-handle");
@@ -36,7 +44,19 @@ navBar.addEventListener("click", function (e) {
   const clicked = e.target.closest(".nav_menu_link");
   if (!clicked) return;
   if ("navMenuOpen" in navMenu.dataset) navBtn.click();
-  blackout.classList.add("active");
+  activateProductSelect();
+});
+allNavLinks.forEach(function (el) {
+  el.addEventListener("mouseenter", function () {
+    deactivateNavLinks();
+    el.querySelector(".nav_menu_link-bar").classList.add("active");
+  });
+  el.addEventListener("mouseleave", function () {
+    el.querySelector(".nav_menu_link-bar").classList.remove("active");
+  });
+});
+productHomeBtn.addEventListener("click", function () {
+  activateProductSelect();
 });
 mainWrap.addEventListener("click", function (e) {
   const clicked = e.target.closest("[data-click-action]");
@@ -48,7 +68,7 @@ mainWrap.addEventListener("click", function (e) {
     datasetAction !== "product-3"
   )
     return;
-  dragWrap.classList.remove("active");
+  activeProductSection.querySelector(".drag-wrap").classList.remove("active");
   resetDragControl();
   activateProduct(datasetAction);
   if (activeVid.parentElement.classList.contains("mp")) {
@@ -56,25 +76,40 @@ mainWrap.addEventListener("click", function (e) {
     toggleMobileProductOpts();
   }
 });
+allProductCardLinks.forEach(function (el) {
+  el.addEventListener("click", function () {
+    const datasetValue = el.dataset.productSection;
+    flashBlackout();
+    activateProductSection(datasetValue);
+    mobileSelectedProductView = false;
+    if (isMobilePortrait) toggleMobileProductOpts();
+  });
+});
 allProductsBtns.forEach(function (el) {
   el.addEventListener("click", function () {
-    if (activeVid.parentElement.classList.contains("mp")) {
-      mobileSelectedProductView = false;
-      toggleMobileProductOpts();
-    }
+    activateProductSelect();
+  });
+});
+allBackBtns.forEach(function (el) {
+  el.addEventListener("click", function () {
+    mobileSelectedProductView = false;
+    toggleMobileProductOpts();
   });
 });
 allVids.forEach(function (el) {
   el.addEventListener("ended", function (e) {
     const endedVid = e.target.closest(".vid");
     if (endedVid.parentElement.dataset.vidType !== "reveal") return;
-    activeRotateVid.parentElement.classList.add("active");
-    activeVid = activeRotateVid;
-    activeVid.load();
-    dragWrap.classList.add("active");
+    if (activeRotateVid) {
+      activeRotateVid.parentElement.classList.add("active");
+      activeVid = activeRotateVid;
+      activeVid.load();
+    }
+    activeProductSection.querySelector(".back-btn").classList.add("active");
+    activeProductSection.querySelector(".drag-wrap").classList.add("active");
   });
 });
-//Lenis ready...........................................
+//Lenis ready
 window.addEventListener("lenis-ready", () => {
   window.lenis.on("scroll", ({ velocity, progress, target }) => {
     if (velocity === 0) {
@@ -83,14 +118,16 @@ window.addEventListener("lenis-ready", () => {
         const rect = section.getBoundingClientRect();
         // If the top of the section is within 10px of the top of the screen
         if (rect.top >= -10 && rect.top <= 10) {
-          blackout.classList.remove("active");
+          // blackout.classList.remove("active");
         }
       });
     }
   });
 });
-//touchstart init, GSAP slider
+//page load, touchstart, GSAP slider
 document.addEventListener("DOMContentLoaded", () => {
+  navBar.style.backgroundColor = "transparent";
+  // document.querySelectorAll(".nav_menu_link-bar")[0].classList.remove("active");
   blackout.classList.remove("active");
   function updateVideo(instance) {
     // 1. Safety checks: Ensure there is a video and it has a duration
@@ -176,21 +213,40 @@ function init() {
       el.classList.remove("active");
     });
   }
-  if (isMobilePortrait !== true) {
-    setActiveVidDiv();
-    setActiveTxt("product-1");
-    setActiveRevealAndRotateVids("product-1");
+}
+function flashBlackout() {
+  blackout.classList.add("active");
+  setTimeout(function () {
+    blackout.classList.remove("active");
+  }, 400);
+}
+function deactivateNavLinks() {
+  allNavLinks.forEach(function (el) {
+    el.classList.remove("active");
+  });
+}
+function activateProductSelect() {
+  allProductSections.forEach(function (el) {
+    el.classList.remove("active");
+  });
+  productSelectSection.classList.add("active");
+}
+function activateProductSection(datasetValue) {
+  productSelectSection.classList.remove("active");
+  allProductSections.forEach(function (el) {
+    el.classList.remove("active");
+  });
+  activeProductSection = allProductSections.find(
+    (el2) => el2.id === datasetValue,
+  );
+  dragWrap.classList.remove("active");
+  activeProductSection.classList.add("active");
+  setActiveTxt("product-1");
+  setActiveVidDiv();
+  setActiveRevealAndRotateVids("product-1");
+  if (isMobilePortrait === false) {
     if (activeVid) activeVid.play();
   }
-}
-function sectionReached(id) {
-  allNavLinks.forEach(function (el) {
-    el.querySelector(".nav_menu_link-bar").classList.remove("active");
-  });
-  activeNavLink = allNavLinks.find(
-    (el) => el.querySelector(".nav_menu_link").innerHTML === id,
-  );
-  activeNavLink.querySelector(".nav_menu_link-bar").classList.add("active");
 }
 function activateProduct(datasetAction) {
   setActiveTxt(datasetAction);
@@ -199,7 +255,7 @@ function activateProduct(datasetAction) {
   activeVid.play();
 }
 function setActiveTxt(datasetAction) {
-  allTxtWraps.forEach(function (el) {
+  activeProductSection.querySelectorAll(".txt-wrap").forEach(function (el) {
     el.classList.remove("active");
     if (el.dataset.product === datasetAction) {
       el.classList.add("active");
@@ -208,12 +264,17 @@ function setActiveTxt(datasetAction) {
   });
 }
 function setActiveVidDiv() {
-  allVidDivs.forEach(function (el) {
+  activeProductSection.querySelectorAll(".vid-div").forEach(function (el) {
     el.classList.remove("active");
   });
   if (isMobilePortrait) {
-    activeVidDiv = allVidDivs.find((el) => el.classList.contains("mp"));
-  } else activeVidDiv = allVidDivs.find((el) => !el.classList.contains("mp"));
+    activeVidDiv = [...activeProductSection.querySelectorAll(".vid-div")].find(
+      (el) => el.classList.contains("mp"),
+    );
+  } else
+    activeVidDiv = [...activeProductSection.querySelectorAll(".vid-div")].find(
+      (el) => !el.classList.contains("mp"),
+    );
   if (activeVidDiv) activeVidDiv.classList.add("active");
 }
 function setActiveRevealAndRotateVids(datasetAction) {
@@ -265,9 +326,11 @@ function toggleMobileProductOpts() {
   blackout.classList.add("active");
   if (mobileSelectedProductView) {
     // 1. Force a height that Safari cannot ignore
-    txtAndBtnsWrap.style.setProperty("height", "20rem", "important");
+    activeProductSection
+      .querySelector(".txt-and-btns-wrap")
+      .style.setProperty("height", "20rem", "important");
     // 2. Standard toggles
-    document.querySelector(".btns-grid").classList.remove("active");
+    activeProductSection.querySelector(".btns-grid").classList.remove("active");
     activeVidDiv.classList.add("active");
     // 3. iPhone Visibility Fixes
     activeTxtWrap.classList.add("active");
@@ -277,10 +340,12 @@ function toggleMobileProductOpts() {
     // 4. The "Magic" Reflow (Critical for iOS)
     void activeTxtWrap.offsetHeight;
   } else {
-    txtAndBtnsWrap.style.height = "100%";
-    document.querySelector(".btns-grid").classList.add("active");
+    activeProductSection.querySelector(".txt-and-btns-wrap").style.height =
+      "100%";
+    activeProductSection.querySelector(".btns-grid").classList.add("active");
     activeVidDiv.classList.remove("active");
-    document.querySelector(".drag-wrap").classList.remove("active");
+    activeProductSection.querySelector(".back-btn").classList.remove("active");
+    activeProductSection.querySelector(".drag-wrap").classList.remove("active");
     activeTxtWrap.classList.remove("active");
   }
   setTimeout(function () {
@@ -378,4 +443,14 @@ function toggleMobileProductOpts() {
 //       container.style.scrollPaddingTop = "0px";
 //     });
 //   }
+// }
+
+// function sectionReached(id) {
+//   allNavLinks.forEach(function (el) {
+//     el.querySelector(".nav_menu_link-bar").classList.remove("active");
+//   });
+//   activeNavLink = allNavLinks.find(
+//     (el) => el.querySelector(".nav_menu_link").innerHTML === id,
+//   );
+//   activeNavLink.querySelector(".nav_menu_link-bar").classList.add("active");
 // }
