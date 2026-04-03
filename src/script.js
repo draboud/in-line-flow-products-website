@@ -107,7 +107,8 @@ allCardLinks.forEach(function (el) {
 });
 if (allBackBtns) {
   allBackBtns.forEach(function (el) {
-    el.addEventListener("click", function () {
+    el.addEventListener("click", function (e) {
+      if (e.target.classList.contains("mp")) return;
       activateProductSelect();
     });
   });
